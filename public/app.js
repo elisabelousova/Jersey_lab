@@ -9,6 +9,8 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg = window.Telegram.WebApp;
   tg.ready();
   tg.expand();
+  tg.setHeaderColor('#ffffff');
+  tg.setBottomBarColor('#ffffff');
 }
 
 async function loadProducts() {
