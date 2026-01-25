@@ -12,9 +12,10 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 16px;
+  padding-bottom: 80px;
 }
 
 header {
@@ -77,9 +78,21 @@ header h1 {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .product-card {
