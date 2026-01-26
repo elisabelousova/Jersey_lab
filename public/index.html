@@ -10,11 +10,11 @@
 <body>
   <div class="container">
     <header>
-      <div class="logo-container">
+      <div class="logo-container" aria-hidden="true">
         <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab">
       </div>
-      <h1>Jersey Lab</h1>
-      <p class="subtitle">Каталог магазинных футболок</p>
+      <h1>Jersey Lab Catalog</h1>
+      <p class="subtitle">В наличии сейчас</p>
     </header>
 
     <div class="filters">
@@ -34,13 +34,14 @@
 
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>Загрузка товаров...</p>
+      <p>Загружаем товары...</p>
     </div>
 
     <div id="products" class="products-grid"></div>
 
     <div id="empty" class="empty" style="display: none;">
-      <p>Товары не найдены</p>
+      <p>Пока нет товаров в наличии. Новинки — в канале 👀</p>
+    <button id="openChannelBtn" class="secondary-button" type="button">Открыть канал</button>
     </div>
   </div>
 
