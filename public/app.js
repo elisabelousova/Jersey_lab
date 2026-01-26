@@ -1,6 +1,7 @@
 const ADMIN_USERNAME = 'jersey_lab_admin';
 const BOT_TOKEN = '8272563276:AAGJIXpXsCeUjkves0larvBXg9Jawe8K7t0';
 const API_URL = 'https://zlgxnrgnpfnjyiugdacu.supabase.co/functions/v1/products-api';
+const CHANNEL_URL = 'https://t.me/jersey_lab';
 
 let allProducts = [];
 let tg = null;
@@ -9,8 +10,10 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg = window.Telegram.WebApp;
   tg.ready();
   tg.expand();
-  tg.setHeaderColor('#ffffff');
-  tg.setBottomBarColor('#ffffff');
+  try {
+    tg.setHeaderColor('#ffffff');
+    tg.setBottomBarColor('#ffffff');
+  } catch (e) {}
 }
 
 async function loadProducts() {
@@ -104,6 +107,10 @@ document.getElementById('sizeFilter').addEventListener('change', (e) => {
     const filtered = allProducts.filter(p => p.size === selectedSize);
     renderProducts(filtered);
   }
+});
+
+document.getElementById('openChannelBtn').addEventListener('click', () => {
+  tgOpenLink(CHANNEL_URL);
 });
 
 loadProducts();
