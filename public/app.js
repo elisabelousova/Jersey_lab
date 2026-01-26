@@ -109,8 +109,4 @@ document.getElementById('sizeFilter').addEventListener('change', (e) => {
   }
 });
 
-document.getElementById('openChannelBtn').addEventListener('click', () => {
-  tgOpenLink(CHANNEL_URL);
-});
-
 loadProducts();
