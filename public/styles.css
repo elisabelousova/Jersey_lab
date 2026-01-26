@@ -240,3 +240,14 @@ header h1 {
   font-size: 16px;
   font-weight: 500;
 }
+
+.secondary-button {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: var(--tg-theme-secondary-bg-color, #fff);
+  color: var(--tg-theme-text-color, #111);
+  font-weight: 700;
+  cursor: pointer;
+}
