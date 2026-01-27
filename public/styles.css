@@ -18,7 +18,7 @@ body {
 .header {
   text-align: center;
   margin-bottom: 24px;
-  padding: 22px 0 18px;
+  padding: 22px 16px 18px;
   background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
   border-bottom: 1px solid #222;
   border-radius: 16px;
@@ -29,7 +29,7 @@ body {
   height: 72px;
   margin: 0 auto 14px;
   border-radius: 50%;
-  overflow: hidden;              /* <- КРУГ */
+  overflow: hidden;
   border: 1px solid #2a2a2a;
   box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
@@ -42,10 +42,9 @@ body {
   filter: brightness(1.05);
 }
 
-header h1 {
+.header h1 {
   font-size: 30px;
   font-weight: 800;
-  margin: 0;
   letter-spacing: -0.5px;
 }
 
@@ -56,7 +55,7 @@ header h1 {
   font-weight: 600;
 }
 
-/* Кнопка “Открыть канал” */
+/* Button */
 .channel-button {
   margin-top: 14px;
   padding: 10px 14px;
@@ -64,7 +63,7 @@ header h1 {
   border: 1px solid #2c2c2c;
   background: #151515;
   color: #fff;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
@@ -85,7 +84,7 @@ header h1 {
   font-size: 12px;
   color: #9a9a9a;
   margin: 0 0 6px 6px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .filter-select {
@@ -98,7 +97,7 @@ header h1 {
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .filter-select:hover { border-color: #444; background: #222; }
@@ -113,7 +112,7 @@ header h1 {
   margin-top: 10px;
   color: #9a9a9a;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   padding-left: 6px;
 }
 
@@ -150,7 +149,7 @@ header h1 {
   overflow: hidden;
   border: 1px solid #333;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 
 .product-card:hover {
@@ -159,15 +158,14 @@ header h1 {
   box-shadow: 0 12px 24px rgba(0,212,255,0.15);
 }
 
-.product-image { width: 100%; aspect-ratio: 1; object-fit: cover; background: #2a2a2a; }
-
 .product-info { padding: 16px; }
 
 .product-title {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 900;
   margin-bottom: 10px;
   line-height: 1.3;
+
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -180,6 +178,7 @@ header h1 {
   margin-bottom: 12px;
   font-size: 13px;
   color: #999;
+  flex-wrap: wrap;
 }
 
 .product-size, .product-season {
@@ -189,7 +188,7 @@ header h1 {
   padding: 4px 8px;
   background: #2c2c2c;
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .product-description {
@@ -197,6 +196,7 @@ header h1 {
   color: #b0b0b0;
   margin-bottom: 12px;
   line-height: 1.45;
+
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -214,7 +214,7 @@ header h1 {
 
 .product-price {
   font-size: 22px;
-  font-weight: 900;
+  font-weight: 950;
   color: #00d4ff;
   letter-spacing: -0.3px;
 }
@@ -223,33 +223,29 @@ header h1 {
   flex: 1;
   padding: 11px 16px;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 950;
   color: #000;
-  background: linear-gradient(135deg, #00d4ff 0%, #00b8cc 10
-
-                              .slider {
-  width: 100%;
-  aspect-ratio: 1;
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #00d4ff 0%, #00b8cc 100%);
+  transition: transform .15s ease, filter .15s ease;
 }
 
-.slider::-webkit-scrollbar {
-  display: none;
+.buy-button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.buy-button:active { transform: translateY(0); }
+
+/* EMPTY */
+.empty {
+  text-align: center;
+  padding: 32px 14px;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  background: #141414;
+  color: #c9c9c9;
 }
 
-.slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  scroll-snap-align: start;
-  background: #222;
-}
-
+/* ===== CAROUSEL ===== */
 .carousel {
   position: relative;
   width: 100%;
@@ -303,6 +299,4 @@ header h1 {
 }
 
 .dot.active {
-  background: rgba(255,255,255,0.9);
-}
-
+  background: rgba(255,255,255,0.9);}
