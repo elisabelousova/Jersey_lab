@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jersey Lab Catalog</title>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -12,19 +13,21 @@
   <div class="container">
     <header class="header">
       <div class="logo-container">
-        <img
-          src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg"
-          alt="Jersey Lab Catalog"
-        />
+        <!-- Поставь свой локальный файл или url -->
+        <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab Catalog" />
       </div>
 
       <h1>Jersey Lab Catalog</h1>
       <p class="subtitle">В наличии сейчас</p>
 
+      <button id="openChannelTop" class="channel-button" type="button">
+        Открыть канал
+      </button>
     </header>
 
     <section class="filters" aria-label="Фильтры">
       <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
+
       <select id="sizeFilter" class="filter-select">
         <option value="">Все размеры</option>
         <option value="XS">XS</option>
