@@ -1,5 +1,4 @@
 const ADMIN_USERNAME = 'elisabelousova';
-const BOT_TOKEN = '8272563276:AAGJIXpXsCeUjkves0larvBXg9Jawe8K7t0';
 const API_URL = 'https://zlgxnrgnpfnjyiugdacu.supabase.co/functions/v1/products-api';
 const CHANNEL_URL = 'https://t.me/jersey_lab';
 
@@ -49,12 +48,35 @@ async function loadProducts() {
   }
 }
 
+function afterRenderAttachHandlers(products) {
+  // buy buttons
+  document.querySelectorAll('.buy-button').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      const productId = e.currentTarget.dataset.productId;
+      const product = products.find((p) => String(p.id) === String(productId));
+      if (product) handleBuy(product);
+    });
+  });
+
+  // dots (carousel)
+  document.querySelectorAll('.carousel .slides').forEach((slides) => {
+    slides.addEventListener('scroll', () => {
+      const carousel = slides.parentElement;
+      const dots = carousel.querySelectorAll('.dot');
+      if (!dots.length) return;
+
+      const idx = Math.round(slides.scrollLeft / slides.clientWidth);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    });
+  });
+}
+
 function renderProducts(products) {
   const productsContainer = document.getElementById('products');
   const emptyState = document.getElementById('empty');
   const count = document.getElementById('count');
 
-  if (products.length === 0) {
+  if (!products.length) {
     productsContainer.innerHTML = '';
     emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
@@ -69,43 +91,19 @@ function renderProducts(products) {
   }
 
   productsContainer.innerHTML = products.map(createProductCard).join('');
-
-  document.querySelectorAll('.buy-button').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const productId = e.currentTarget.dataset.productId;
-      const product = products.find(p => String(p.id) === String(productId));
-      if (product) handleBuy(product);
-
-  document.querySelectorAll('.carousel .slides').forEach(slides => {
-  slides.addEventListener('scroll', () => {
-    const carousel = slides.parentElement;
-    const dots = carousel.querySelectorAll('.dot');
-    if (!dots.length) return;
-
-    const idx = Math.round(slides.scrollLeft / slides.clientWidth);
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-  });
-});
+  afterRenderAttachHandlers(products);
 }
 
-/**
- * ВАЖНО:
- * Фронт НЕ должен собирать фото через api.telegram.org/file/bot<TOKEN>...
- * Пусть products-api возвращает готовый URL картинки:
- * - product.cover_url (или product.photo_url)
- * Иначе показываем плейсхолдер.
- */
 function createProductCard(product) {
-  const photos = Array.isArray(product.photos) ? product.photos.slice(0, 4) : [];
+  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 4) : [];
+  const photoUrls = urls.length
+    ? urls
+    : ['https://via.placeholder.com/600x600?text=No+Image'];
 
-  const photoUrls = photos.length
-    ? photos.map(p => `https://api.telegram.org/file/bot${BOT_TOKEN}/${p}`)
-    : ['https://via.placeholder.com/400x400?text=No+Image'];
-
-  const slidesHtml = photoUrls.map((url, idx) => `
+  const slidesHtml = photoUrls.map((url) => `
     <div class="slide">
-      <img src="${url}" alt="${product.title}" loading="lazy"
-           onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+      <img src="${escapeAttr(url)}" alt="${escapeAttr(product.title || 'Jersey')}" loading="lazy"
+           onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
     </div>
   `).join('');
 
@@ -115,7 +113,7 @@ function createProductCard(product) {
 
   return `
     <div class="product-card">
-      <div class="carousel" data-product-id="${product.id}">
+      <div class="carousel" data-product-id="${escapeAttr(product.id)}">
         <div class="slides">
           ${slidesHtml}
         </div>
@@ -123,15 +121,15 @@ function createProductCard(product) {
       </div>
 
       <div class="product-info">
-        <h3 class="product-title">${product.title}</h3>
+        <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
         <div class="product-meta">
-          <span class="product-size">📏 ${product.size}</span>
-          ${product.season ? `<span class="product-season">📅 ${product.season}</span>` : ''}
+          <span class="product-size">📏 ${escapeHtml(product.size || '')}</span>
+          ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
-        ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+        ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
         <div class="product-footer">
-          <span class="product-price">${product.price}₽</span>
-          <button class="buy-button" data-product-id="${product.id}">Купить</button>
+          <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
+          <button class="buy-button" data-product-id="${escapeAttr(product.id)}">Купить</button>
         </div>
       </div>
     </div>
@@ -153,13 +151,9 @@ function handleBuy(product) {
 
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = e.target.value;
+  if (!selectedSize) return renderProducts(allProducts);
 
-  if (!selectedSize) {
-    renderProducts(allProducts);
-    return;
-  }
-
-  const filtered = allProducts.filter(p => p.size === selectedSize);
+  const filtered = allProducts.filter((p) => p.size === selectedSize);
   renderProducts(filtered);
 });
 
@@ -170,6 +164,11 @@ function escapeHtml(str) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+// для атрибутов (src/id)
+function escapeAttr(str) {
+  return String(str).replaceAll('"', '&quot;');
 }
 
 loadProducts();
