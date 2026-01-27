@@ -226,3 +226,27 @@ header h1 {
   font-weight: 900;
   color: #000;
   background: linear-gradient(135deg, #00d4ff 0%, #00b8cc 10
+
+                              .slider {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scroll-snap-align: start;
+  background: #222;
+}
+
