@@ -87,37 +87,30 @@ function renderProducts(products) {
  * Иначе показываем плейсхолдер.
  */
 function createProductCard(product) {
-  const photoUrl =
-    product.cover_url ||
-    product.photo_url ||
-    'https://via.placeholder.com/400x400?text=No+Image';
+  const photos = (product.photos || []).slice(0, 4);
 
-  const title = escapeHtml(product.title || 'Без названия');
-  const size = escapeHtml(product.size || '—');
-  const season = product.season ? escapeHtml(product.season) : '';
-  const description = product.description ? escapeHtml(product.description) : '';
-  const price = Number(product.price || 0);
+  const slidesHtml = photos.length
+    ? photos.map((fileId) => {
+        const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileId}`;
+        return `<img src="${url}" class="slide" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">`;
+      }).join('')
+    : `<img src="https://via.placeholder.com/400x400?text=No+Image" class="slide">`;
 
   return `
     <div class="product-card">
-      <img
-        src="${photoUrl}"
-        alt="${title}"
-        class="product-image"
-        onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'"
-      />
+      <div class="slider" aria-label="Фото товара">
+        ${slidesHtml}
+      </div>
+
       <div class="product-info">
-        <h3 class="product-title">${title}</h3>
-
+        <h3 class="product-title">${product.title}</h3>
         <div class="product-meta">
-          <span class="product-size">📏 ${size}</span>
-          ${season ? `<span class="product-season">📅 ${season}</span>` : ''}
+          <span class="product-size">📏 ${product.size}</span>
+          ${product.season ? `<span class="product-season">📅 ${product.season}</span>` : ''}
         </div>
-
-        ${description ? `<p class="product-description">${description}</p>` : ''}
-
+        ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
         <div class="product-footer">
-          <span class="product-price">${price}₽</span>
+          <span class="product-price">${product.price}₽</span>
           <button class="buy-button" data-product-id="${product.id}">Купить</button>
         </div>
       </div>
