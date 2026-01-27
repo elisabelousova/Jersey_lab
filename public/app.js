@@ -75,8 +75,17 @@ function renderProducts(products) {
       const productId = e.currentTarget.dataset.productId;
       const product = products.find(p => String(p.id) === String(productId));
       if (product) handleBuy(product);
-    });
+
+  document.querySelectorAll('.carousel .slides').forEach(slides => {
+  slides.addEventListener('scroll', () => {
+    const carousel = slides.parentElement;
+    const dots = carousel.querySelectorAll('.dot');
+    if (!dots.length) return;
+
+    const idx = Math.round(slides.scrollLeft / slides.clientWidth);
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
   });
+});
 }
 
 /**
@@ -87,19 +96,30 @@ function renderProducts(products) {
  * Иначе показываем плейсхолдер.
  */
 function createProductCard(product) {
-  const photos = (product.photos || []).slice(0, 4);
+  const photos = Array.isArray(product.photos) ? product.photos.slice(0, 4) : [];
 
-  const slidesHtml = photos.length
-    ? photos.map((fileId) => {
-        const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${fileId}`;
-        return `<img src="${url}" class="slide" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">`;
-      }).join('')
-    : `<img src="https://via.placeholder.com/400x400?text=No+Image" class="slide">`;
+  const photoUrls = photos.length
+    ? photos.map(p => `https://api.telegram.org/file/bot${BOT_TOKEN}/${p}`)
+    : ['https://via.placeholder.com/400x400?text=No+Image'];
+
+  const slidesHtml = photoUrls.map((url, idx) => `
+    <div class="slide">
+      <img src="${url}" alt="${product.title}" loading="lazy"
+           onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'">
+    </div>
+  `).join('');
+
+  const dotsHtml = photoUrls.length > 1
+    ? `<div class="dots">${photoUrls.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('')}</div>`
+    : '';
 
   return `
     <div class="product-card">
-      <div class="slider" aria-label="Фото товара">
-        ${slidesHtml}
+      <div class="carousel" data-product-id="${product.id}">
+        <div class="slides">
+          ${slidesHtml}
+        </div>
+        ${dotsHtml}
       </div>
 
       <div class="product-info">
