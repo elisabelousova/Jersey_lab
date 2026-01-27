@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jersey Lab Catalog</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <div class="container">
-    <header>
-      <div class="logo-container" aria-hidden="true">
-        <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab">
+    <header class="header">
+      <div class="logo-container">
+        <img
+          src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg"
+          alt="Jersey Lab"
+        />
       </div>
-      <h1>Jersey Lab Catalog</h1>
+
+      <h1>Jersey Lab</h1>
       <p class="subtitle">В наличии сейчас</p>
+
+      <button id="openChannelTop" class="channel-button" type="button">
+        Открыть канал
+      </button>
     </header>
 
-    <div class="filters">
+    <section class="filters" aria-label="Фильтры">
+      <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
       <select id="sizeFilter" class="filter-select">
         <option value="">Все размеры</option>
         <option value="XS">XS</option>
@@ -30,18 +40,23 @@
         <option value="4XL">4XL</option>
         <option value="5XL">5XL</option>
       </select>
-    </div>
+
+      <div id="count" class="count" style="display:none;"></div>
+    </section>
 
     <div id="loading" class="loading">
       <div class="spinner"></div>
       <p>Загружаем товары...</p>
     </div>
 
-    <div id="products" class="products-grid"></div>
+    <main id="products" class="products-grid" aria-live="polite"></main>
 
-    <div id="empty" class="empty" style="display: none;">
+    <section id="empty" class="empty" style="display:none;">
       <p>Пока нет товаров в наличии. Новинки — в канале 👀</p>
-    </div>
+      <button id="openChannelEmpty" class="channel-button" type="button">
+        Открыть канал
+      </button>
+    </section>
   </div>
 
   <script src="app.js"></script>
