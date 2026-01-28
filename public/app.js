@@ -61,7 +61,7 @@ async function loadProducts() {
 }
 
 function createProductCard(product) {
-  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 4) : [];
+ const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
   const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
 
   const slidesHtml = photoUrls.map((url, idx) => `
