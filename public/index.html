@@ -9,6 +9,22 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
+<div id="lightbox" class="lightbox" style="display:none;">
+  <button id="lbClose" class="lb-close" type="button">✕</button>
+
+  <div class="lb-body">
+    <button id="lbPrev" class="lb-nav lb-prev" type="button">‹</button>
+
+    <div class="lb-stage">
+      <img id="lbImg" class="lb-img" alt="Фото товара" />
+    </div>
+
+    <button id="lbNext" class="lb-nav lb-next" type="button">›</button>
+  </div>
+
+  <div id="lbCounter" class="lb-counter"></div>
+</div>
+  
 <body>
   <div class="container">
 <header class="header">
