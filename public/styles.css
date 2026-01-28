@@ -379,3 +379,35 @@ body {
   font-size: 13px;
 }
 
+/* ===== Card carousel arrows ===== */
+.car-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(15,15,15,0.55);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.car-prev { left: 10px; }
+.car-next { right: 10px; }
+
+.car-arrow:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
+/* чтобы не мешало кнопкам на очень маленьких экранах */
+@media (max-width: 360px) {
+  .car-arrow { width: 30px; height: 30px; font-size: 20px; }
+}
+
