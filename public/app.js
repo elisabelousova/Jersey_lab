@@ -95,7 +95,6 @@ function createProductCard(product) {
     </div>
   `;
 }
-
 function renderProducts(products) {
   const productsContainer = document.getElementById('products');
   const emptyState = document.getElementById('empty');
@@ -105,10 +104,16 @@ function renderProducts(products) {
     productsContainer.innerHTML = '';
     emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
+
+    // 🔥 ВОТ ТУТ
+    const btn = document.getElementById('openChannelEmpty');
+    if (btn) btn.onclick = openChannel;
+
     return;
   }
 
   emptyState.style.display = 'none';
+
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
@@ -117,6 +122,7 @@ function renderProducts(products) {
   productsContainer.innerHTML = products.map(createProductCard).join('');
   afterRenderAttachHandlers(products);
 }
+
 
 function handleBuy(product) {
   const message =
