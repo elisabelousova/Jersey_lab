@@ -5,10 +5,33 @@ const CHANNEL_URL = 'https://t.me/jersey_lab';
 let allProducts = [];
 let tg = null;
 
+// Telegram WebApp init
 if (window.Telegram && window.Telegram.WebApp) {
   tg = window.Telegram.WebApp;
   tg.ready();
   tg.expand();
+  try {
+    tg.setHeaderColor('#ffffff');
+    tg.setBottomBarColor('#ffffff');
+  } catch (e) {}
+}
+
+function openChannel() {
+  if (tg) tg.openTelegramLink(CHANNEL_URL);
+  else window.open(CHANNEL_URL, '_blank');
+}
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function escapeAttr(str) {
+  return String(str ?? '').replaceAll('"', '&quot;');
 }
 
 async function loadProducts() {
@@ -30,96 +53,60 @@ async function loadProducts() {
   } catch (error) {
     console.error('Error loading products:', error);
     productsContainer.innerHTML =
-      '<p style="text-align:center;color:#ff6666;font-weight:700;">Ошибка загрузки товаров</p>';
+      '<p class="error-text">Ошибка загрузки товаров</p>';
     emptyState.style.display = 'none';
   } finally {
     loading.style.display = 'none';
   }
 }
 
-function afterRenderAttachHandlers(products) {
-  document.querySelectorAll('.buy-button').forEach((button) => {
-    button.addEventListener('click', (e) => {
-      const productId = e.currentTarget.dataset.productId;
-      const product = products.find((p) => String(p.id) === String(productId));
-      if (product) handleBuy(product);
-
-        // open lightbox on image tap
-  document.querySelectorAll('.product-photo').forEach((imgEl) => {
-    imgEl.addEventListener('click', () => {
-      const productId = imgEl.dataset.productId;
-      const startIdx = Number(imgEl.dataset.photoIdx || 0);
-
-      const product = products.find((p) => String(p.id) === String(productId));
-      const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 4) : [];
-      if (urls.length) openLightbox(urls, startIdx);
-    });
-  });
-
-    });
-  });
-
-  document.querySelectorAll('.carousel .slides').forEach((slides) => {
-    slides.addEventListener('scroll', () => {
-      const carousel = slides.parentElement;
-      const dots = carousel.querySelectorAll('.dot');
-      if (!dots.length) return;
-
-      const idx = Math.round(slides.scrollLeft / slides.clientWidth);
-      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    });
-  });
-}
-
 function createProductCard(product) {
   const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 4) : [];
-  const photoUrls = urls.length ? urls : ['https://via.placeholder.com/400x400?text=No+Image'];
+  const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
 
   const slidesHtml = photoUrls.map((url, idx) => `
-  <div class="slide">
-    <img
-      src="${escapeAttr(url)}"
-      alt="${escapeHtml(product.title || '')}"
-      loading="lazy"
-      data-product-id="${escapeAttr(product.id)}"
-      data-photo-idx="${idx}"
-      class="product-photo"
-      onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'"
-    >
-  </div>
-`).join('');
+    <div class="slide">
+      <img
+        src="${escapeAttr(url)}"
+        alt="${escapeHtml(product.title || '')}"
+        loading="lazy"
+        class="product-photo"
+        data-product-id="${escapeAttr(product.id)}"
+        data-photo-idx="${idx}"
+        onerror="this.src='https://via.placeholder.com/800x800?text=No+Image'"
+      >
+    </div>
+  `).join('');
 
   const dotsHtml = photoUrls.length > 1
-    ? `<div class="dots">${photoUrls.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('')}</div>`
+    ? `<div class="dots">${photoUrls.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}</div>`
     : '';
 
-const arrowsHtml = photoUrls.length > 1 ? `
-  <button class="car-arrow car-prev" type="button" aria-label="Предыдущее фото">‹</button>
-  <button class="car-arrow car-next" type="button" aria-label="Следующее фото">›</button>
-` : '';
+  const arrowsHtml = photoUrls.length > 1 ? `
+    <button class="car-arrow car-prev" type="button" aria-label="Предыдущее фото">‹</button>
+    <button class="car-arrow car-next" type="button" aria-label="Следующее фото">›</button>
+  ` : '';
 
-return `
-  <div class="product-card">
-    <div class="carousel" data-product-id="${escapeAttr(product.id)}">
-      <div class="slides">${slidesHtml}</div>
-      ${dotsHtml}
-      ${arrowsHtml}
-    </div>
-
-    <div class="product-info">
-      ...
-    </div>
-  </div>
-`;
-
+  return `
+    <div class="product-card" data-product-id="${escapeAttr(product.id)}">
+      <div class="carousel" data-product-id="${escapeAttr(product.id)}">
+        <div class="slides">
+          ${slidesHtml}
+        </div>
+        ${dotsHtml}
+        ${arrowsHtml}
+      </div>
 
       <div class="product-info">
         <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
+
         <div class="product-meta">
           <span class="product-size">📏 ${escapeHtml(product.size || '')}</span>
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
+
         ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
+
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
           <button class="buy-button" data-product-id="${escapeAttr(product.id)}">Купить</button>
@@ -128,6 +115,7 @@ return `
     </div>
   `;
 }
+
 function renderProducts(products) {
   const productsContainer = document.getElementById('products');
   const emptyState = document.getElementById('empty');
@@ -138,7 +126,6 @@ function renderProducts(products) {
     emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
 
-    // 🔥 ВОТ ТУТ
     const btn = document.getElementById('openChannelEmpty');
     if (btn) btn.onclick = openChannel;
 
@@ -156,18 +143,6 @@ function renderProducts(products) {
   afterRenderAttachHandlers(products);
 }
 
-  emptyState.style.display = 'none';
-
-  if (count) {
-    count.style.display = 'block';
-    count.textContent = `Найдено: ${products.length}`;
-  }
-
-  productsContainer.innerHTML = products.map(createProductCard).join('');
-  afterRenderAttachHandlers(products);
-}
-
-
 function handleBuy(product) {
   const message =
     `Здравствуйте! Хочу купить:\n\n` +
@@ -180,42 +155,108 @@ function handleBuy(product) {
   else window.open(url, '_blank');
 }
 
+function scrollCarouselToIndex(slidesEl, idx) {
+  const w = slidesEl.clientWidth;
+  slidesEl.scrollTo({ left: idx * w, behavior: 'smooth' });
+}
+
+function getCarouselIndex(slidesEl) {
+  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
+}
+
+function setDotsActive(carouselEl, idx) {
+  const dots = carouselEl.querySelectorAll('.dot');
+  dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+function afterRenderAttachHandlers(products) {
+  // Buy
+  document.querySelectorAll('.buy-button').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      const productId = e.currentTarget.dataset.productId;
+      const product = products.find((p) => String(p.id) === String(productId));
+      if (product) handleBuy(product);
+    });
+  });
+
+  // Carousel scroll => update dots
+  document.querySelectorAll('.carousel').forEach((carouselEl) => {
+    const slidesEl = carouselEl.querySelector('.slides');
+    if (!slidesEl) return;
+
+    slidesEl.addEventListener('scroll', () => {
+      const idx = getCarouselIndex(slidesEl);
+      setDotsActive(carouselEl, idx);
+    }, { passive: true });
+
+    // Arrows
+    const prevBtn = carouselEl.querySelector('.car-prev');
+    const nextBtn = carouselEl.querySelector('.car-next');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = getCarouselIndex(slidesEl);
+        const dots = carouselEl.querySelectorAll('.dot');
+        const total = dots.length || 1;
+        const nextIdx = (idx - 1 + total) % total;
+        scrollCarouselToIndex(slidesEl, nextIdx);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = getCarouselIndex(slidesEl);
+        const dots = carouselEl.querySelectorAll('.dot');
+        const total = dots.length || 1;
+        const nextIdx = (idx + 1) % total;
+        scrollCarouselToIndex(slidesEl, nextIdx);
+      });
+    }
+  });
+
+  // Click photo => open lightbox
+  document.querySelectorAll('.product-photo').forEach((imgEl) => {
+    imgEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      const productId = imgEl.dataset.productId;
+      const startIdx = Number(imgEl.dataset.photoIdx || 0);
+
+      const product = products.find((p) => String(p.id) === String(productId));
+      const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 4) : [];
+      if (urls.length) openLightbox(urls, startIdx);
+    });
+  });
+}
+
+// Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = e.target.value;
   if (!selectedSize) return renderProducts(allProducts);
   renderProducts(allProducts.filter((p) => p.size === selectedSize));
 });
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-function escapeAttr(str) {
-  return String(str).replaceAll('"', '&quot;');
-}
-
-loadProducts();
-
-// ===== Lightbox logic =====
+// ===== Lightbox =====
 let lbOpen = false;
 let lbUrls = [];
 let lbIdx = 0;
 
-const lb = document.getElementById('lightbox');
-const lbImg = document.getElementById('lbImg');
-const lbClose = document.getElementById('lbClose');
-const lbPrev = document.getElementById('lbPrev');
-const lbNext = document.getElementById('lbNext');
-const lbCounter = document.getElementById('lbCounter');
+function $(id) { return document.getElementById(id); }
+
+const lb = $('lightbox');
+const lbImg = $('lbImg');
+const lbClose = $('lbClose');
+const lbPrev = $('lbPrev');
+const lbNext = $('lbNext');
+const lbCounter = $('lbCounter');
 
 function openLightbox(urls, startIdx = 0) {
   lbUrls = Array.isArray(urls) ? urls : [];
   lbIdx = Math.max(0, Math.min(startIdx, lbUrls.length - 1));
-  if (!lbUrls.length) return;
+  if (!lbUrls.length || !lb || !lbImg) return;
 
   lbOpen = true;
   lb.style.display = 'flex';
@@ -224,14 +265,17 @@ function openLightbox(urls, startIdx = 0) {
 
 function closeLightbox() {
   lbOpen = false;
-  lb.style.display = 'none';
+  if (lb) lb.style.display = 'none';
 }
 
 function renderLightbox() {
+  if (!lbImg) return;
   lbImg.src = lbUrls[lbIdx];
-  lbCounter.textContent = `${lbIdx + 1} / ${lbUrls.length}`;
-  lbPrev.style.visibility = (lbUrls.length > 1) ? 'visible' : 'hidden';
-  lbNext.style.visibility = (lbUrls.length > 1) ? 'visible' : 'hidden';
+  if (lbCounter) lbCounter.textContent = `${lbIdx + 1} / ${lbUrls.length}`;
+
+  const multi = lbUrls.length > 1;
+  if (lbPrev) lbPrev.style.visibility = multi ? 'visible' : 'hidden';
+  if (lbNext) lbNext.style.visibility = multi ? 'visible' : 'hidden';
 }
 
 function prevLb() {
@@ -246,16 +290,16 @@ function nextLb() {
   renderLightbox();
 }
 
-lbClose?.addEventListener('click', closeLightbox);
-lbPrev?.addEventListener('click', prevLb);
-lbNext?.addEventListener('click', nextLb);
+lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox(); });
+lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
+lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-// закрытие по клику на фон
+// click background to close
 lb?.addEventListener('click', (e) => {
   if (e.target === lb) closeLightbox();
 });
 
-// клавиши (для десктопа)
+// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -263,7 +307,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
-// свайп в lightbox
+// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
@@ -276,3 +320,5 @@ lb?.addEventListener('touchend', (e) => {
   if (dx > 0) prevLb(); else nextLb();
 }, { passive: true });
 
+// Start
+loadProducts();
