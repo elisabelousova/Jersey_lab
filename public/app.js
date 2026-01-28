@@ -156,6 +156,17 @@ function renderProducts(products) {
   afterRenderAttachHandlers(products);
 }
 
+  emptyState.style.display = 'none';
+
+  if (count) {
+    count.style.display = 'block';
+    count.textContent = `Найдено: ${products.length}`;
+  }
+
+  productsContainer.innerHTML = products.map(createProductCard).join('');
+  afterRenderAttachHandlers(products);
+}
+
 
 function handleBuy(product) {
   const message =
