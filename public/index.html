@@ -9,39 +9,19 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<div id="lightbox" class="lightbox" style="display:none;">
-  <button id="lbClose" class="lb-close" type="button">✕</button>
-
-  <div class="lb-body">
-    <button id="lbPrev" class="lb-nav lb-prev" type="button">‹</button>
-
-    <div class="lb-stage">
-      <img id="lbImg" class="lb-img" alt="Фото товара" />
-    </div>
-
-    <button id="lbNext" class="lb-nav lb-next" type="button">›</button>
-  </div>
-
-  <div id="lbCounter" class="lb-counter"></div>
-</div>
-  
 <body>
   <div class="container">
-<header class="header">
-  <div class="logo-container">
-    <img
-      src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg"
-      alt="Jersey Lab Catalog"
-    />
-  </div>
+    <header class="header">
+      <div class="logo-container">
+        <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab" />
+      </div>
 
-  <h1>Jersey Lab Catalog</h1>
-  <p class="subtitle">В наличии сейчас</p>
-</header>
+      <h1>Jersey Lab Catalog</h1>
+      <p class="subtitle">В наличии сейчас</p>
+    </header>
 
     <section class="filters" aria-label="Фильтры">
       <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
-
       <select id="sizeFilter" class="filter-select">
         <option value="">Все размеры</option>
         <option value="XS">XS</option>
@@ -71,6 +51,17 @@
         Открыть канал
       </button>
     </section>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" style="display:none;" aria-hidden="true">
+    <button id="lbClose" class="lb-close" type="button" aria-label="Закрыть">✕</button>
+
+    <button id="lbPrev" class="lb-arrow lb-prev" type="button" aria-label="Предыдущее фото">‹</button>
+    <img id="lbImg" class="lb-img" alt="Фото товара" />
+    <button id="lbNext" class="lb-arrow lb-next" type="button" aria-label="Следующее фото">›</button>
+
+    <div id="lbCounter" class="lb-counter">1 / 1</div>
   </div>
 
   <script src="app.js"></script>
