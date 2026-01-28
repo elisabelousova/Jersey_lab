@@ -94,47 +94,88 @@ function renderProducts(products) {
   afterRenderAttachHandlers(products);
 }
 
-function createProductCard(product) {
-  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 4) : [];
-  const photoUrls = urls.length
-    ? urls
-    : ['https://via.placeholder.com/600x600?text=No+Image'];
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
-  const slidesHtml = photoUrls.map((url) => `
-    <div class="slide">
-      <img src="${escapeAttr(url)}" alt="${escapeAttr(product.title || 'Jersey')}" loading="lazy"
-           onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
-    </div>
-  `).join('');
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
 
-  const dotsHtml = photoUrls.length > 1
-    ? `<div class="dots">${photoUrls.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('')}</div>`
-    : '';
+type DbProduct = {
+  id: string;
+  title: string;
+  season: string;
+  size: string;
+  price: number;
+  description: string;
+  photos: string[];        // file_path[]
+  status: string;
+  created_at: string;
+};
 
-  return `
-    <div class="product-card">
-      <div class="carousel" data-product-id="${escapeAttr(product.id)}">
-        <div class="slides">
-          ${slidesHtml}
-        </div>
-        ${dotsHtml}
-      </div>
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
+  if (req.method !== "GET") {
+    return new Response(JSON.stringify({ ok: false, error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
-      <div class="product-info">
-        <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
-        <div class="product-meta">
-          <span class="product-size">📏 ${escapeHtml(product.size || '')}</span>
-          ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
-        </div>
-        ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
-        <div class="product-footer">
-          <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
-          <button class="buy-button" data-product-id="${escapeAttr(product.id)}">Купить</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const url = new URL(req.url);
+    const status = url.searchParams.get("status") || "available";
+    const size = url.searchParams.get("size");
+
+let query = supabase
+  .from('products')
+  .select('*')
+  .eq('status', status)
+  .gt('price', 0)
+  .neq('title', '')
+  .order('created_at', { ascending: false });
+
+if (size) query = query.eq('size', size);
+
+    const { data, error } = await query;
+    if (error) {
+      return new Response(JSON.stringify({ ok: false, error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const base = Deno.env.get("SUPABASE_URL") ?? "";
+    const proxyBase = `${base}/functions/v1/telegram-file?path=`;
+
+    const products = (data as DbProduct[]).map((p) => {
+      const photos = Array.isArray(p.photos) ? p.photos.slice(0, 4) : [];
+      const photo_urls = photos.map((path) => proxyBase + encodeURIComponent(path));
+      return {
+        ...p,
+        photo_urls,
+        cover_url: photo_urls[0] ?? null,
+      };
+    });
+
+    return new Response(JSON.stringify({ ok: true, products }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
 
 function handleBuy(product) {
   const message =
