@@ -34,6 +34,23 @@ function escapeAttr(str) {
   return String(str ?? '').replaceAll('"', '&quot;');
 }
 
+function populateSizeFilter(products) {
+  const sel = document.getElementById('sizeFilter');
+  if (!sel) return;
+
+  const sizes = Array.from(new Set((products || []).map(p => p.size).filter(Boolean)));
+  const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
+  sizes.sort((a,b) => (order.indexOf(a) === -1 ? 999 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 999 : order.indexOf(b)));
+
+  const current = sel.value || '';
+
+  sel.innerHTML =
+    `<option value="">Все размеры</option>` +
+    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+
+  sel.value = sizes.includes(current) ? current : '';
+}
+
 async function loadProducts() {
   const loading = document.getElementById('loading');
   const productsContainer = document.getElementById('products');
@@ -44,9 +61,10 @@ async function loadProducts() {
     const data = await response.json();
 
     if (data.ok && Array.isArray(data.products)) {
-      allProducts = data.products;
-      renderProducts(allProducts);
-    } else {
+  allProducts = data.products;
+  populateSizeFilter(allProducts);
+  renderProducts(allProducts);
+}else {
       console.log('API response:', data);
       throw new Error('Bad API response');
     }
@@ -226,7 +244,7 @@ function afterRenderAttachHandlers(products) {
       const startIdx = Number(imgEl.dataset.photoIdx || 0);
 
       const product = products.find((p) => String(p.id) === String(productId));
-      const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 4) : [];
+      const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 8) : [];
       if (urls.length) openLightbox(urls, startIdx);
     });
   });
