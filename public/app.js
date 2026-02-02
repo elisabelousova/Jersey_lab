@@ -150,7 +150,13 @@ function createProductCard(product) {
         <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
 
         <div class="product-meta">
-          <span class="product-size">📏 ${escapeHtml(product.size || '')}</span>
+        <span class="product-size">📏 ${
+  escapeHtml(
+    Array.isArray(product.sizes) && product.sizes.length
+      ? product.sizes.map(normalizeSizeForUi).join(', ')
+      : (product.size || '')
+  )
+}</span>
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
