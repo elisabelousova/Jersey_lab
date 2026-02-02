@@ -30,6 +30,18 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
+function escapeAttr(str) {
+  return String(str ?? '').replaceAll('"', '&quot;');
+}
+
+function normalizeSizeForUi(s) {
+  const t = String(s || '').trim().toUpperCase();
+  if (t === '2XL') return 'XXL';
+  if (t === '3XL') return 'XXXL';
+  if (t === '4XL') return 'XXXXL';
+  if (t === '5XL') return 'XXXXXL';
+  return t;
+}
 function populateSizeFilter(products) {
   const sel = document.getElementById('sizeFilter');
   if (!sel) return;
@@ -39,19 +51,17 @@ function populateSizeFilter(products) {
   for (const p of products || []) {
     // ✅ основной вариант: sizes = ["M","L","XL"]
     if (Array.isArray(p.sizes) && p.sizes.length) {
-      p.sizes.forEach((s) => set.add(String(s).trim()));
-      continue;
-    }
+  p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
+  continue;
+}
 
-    // fallback на старые записи: size строкой "M, L, XL"
-    if (p.size) {
-      String(p.size)
-        .split(',')
-        .map((x) => x.trim())
-        .filter(Boolean)
-        .forEach((s) => set.add(s));
-    }
-  }
+if (p.size) {
+  String(p.size)
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .forEach((s) => set.add(normalizeSizeForUi(s)));
+}
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
@@ -61,9 +71,9 @@ function populateSizeFilter(products) {
 
   const current = sel.value || '';
 
-  sel.innerHTML =
-    <option value="">Все размеры</option> +
-    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+sel.innerHTML =
+  <option value="">Все размеры</option> +
+  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
 }
@@ -361,4 +371,6 @@ lb?.addEventListener('touchend', (e) => {
 }, { passive: true });
 
 // Start
-loadProducts();
+document.addEventListener('DOMContentLoaded', () => {
+  loadProducts();
+});
