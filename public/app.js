@@ -75,9 +75,9 @@ function populateSizeFilter(products) {
   const current = sel.value || '';
 
   // ✅ обязательно строка в backticks/кавычках
-  sel.innerHTML =
-    <option value="">Все размеры</option> +
-    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+sel.innerHTML =
+  `<option value="">Все размеры</option>` +
+  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
 }
