@@ -199,10 +199,15 @@ function renderProducts(products) {
 }
 
 function handleBuy(product) {
+  const sizeText =
+    (Array.isArray(product.sizes) && product.sizes.length)
+      ? product.sizes.map(normalizeSizeForUi).join(', ')
+      : normalizeSizeForUi(product.size || '');
+
   const message =
     `Здравствуйте! Хочу купить:\n\n` +
     `${product.title || ''}\n` +
-    `Размер: ${product.size || ''}\n` +
+    `Размер: ${sizeText}\n` +
     `Цена: ${product.price || ''}₽`;
 
   const url = `https://t.me/${ADMIN_USERNAME}?text=${encodeURIComponent(message)}`;
