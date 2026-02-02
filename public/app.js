@@ -42,6 +42,7 @@ function normalizeSizeForUi(s) {
   if (t === '5XL') return 'XXXXXL';
   return t;
 }
+
 function populateSizeFilter(products) {
   const sel = document.getElementById('sizeFilter');
   if (!sel) return;
@@ -49,19 +50,21 @@ function populateSizeFilter(products) {
   const set = new Set();
 
   for (const p of products || []) {
-    // ✅ основной вариант: sizes = ["M","L","XL"]
+    // основной вариант: sizes = ["M","L","XL"]
     if (Array.isArray(p.sizes) && p.sizes.length) {
-  p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
-  continue;
-}
+      p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
+      continue;
+    }
 
-if (p.size) {
-  String(p.size)
-    .split(',')
-    .map((x) => x.trim())
-    .filter(Boolean)
-    .forEach((s) => set.add(normalizeSizeForUi(s)));
-}
+    // fallback: size строкой "M, L, XL"
+    if (p.size) {
+      String(p.size)
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .forEach((s) => set.add(normalizeSizeForUi(s)));
+    }
+  } // ✅ вот этой скобки у тебя не было
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
@@ -71,9 +74,10 @@ if (p.size) {
 
   const current = sel.value || '';
 
-sel.innerHTML =
-  <option value="">Все размеры</option> +
-  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+  // ✅ обязательно строка в backticks/кавычках
+  sel.innerHTML =
+    <option value="">Все размеры</option> +
+    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
 }
@@ -278,15 +282,25 @@ function afterRenderAttachHandlers(products) {
 }
 
 // Filter
+// Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
-  const selectedSize = e.target.value;
+  const selectedSize = normalizeSizeForUi(e.target.value);
   if (!selectedSize) return renderProducts(allProducts);
+
   renderProducts(allProducts.filter((p) => {
-  const arr = Array.isArray(p.sizes) ? p.sizes : [];
-  if (arr.length) return arr.includes(selectedSize);
-  // fallback на старые записи, где sizes ещё пустой
-  return String(p.size || '').split(',').map(x => x.trim()).includes(selectedSize);
-}));
+    // основной путь — sizes массив
+    const arr = Array.isArray(p.sizes)
+      ? p.sizes.map(normalizeSizeForUi)
+      : [];
+
+    if (arr.length) return arr.includes(selectedSize);
+
+    // fallback для старых записей
+    return String(p.size || '')
+      .split(',')
+      .map(x => normalizeSizeForUi(x))
+      .includes(selectedSize);
+  }));
 });
 
 // ===== Lightbox =====
