@@ -30,22 +30,39 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
-function escapeAttr(str) {
-  return String(str ?? '').replaceAll('"', '&quot;');
-}
-
 function populateSizeFilter(products) {
   const sel = document.getElementById('sizeFilter');
   if (!sel) return;
 
-  const sizes = Array.from(new Set((products || []).map(p => p.size).filter(Boolean)));
+  const set = new Set();
+
+  for (const p of products || []) {
+    // ✅ основной вариант: sizes = ["M","L","XL"]
+    if (Array.isArray(p.sizes) && p.sizes.length) {
+      p.sizes.forEach((s) => set.add(String(s).trim()));
+      continue;
+    }
+
+    // fallback на старые записи: size строкой "M, L, XL"
+    if (p.size) {
+      String(p.size)
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .forEach((s) => set.add(s));
+    }
+  }
+
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
-  sizes.sort((a,b) => (order.indexOf(a) === -1 ? 999 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 999 : order.indexOf(b)));
+  const sizes = Array.from(set).sort((a, b) => {
+    const ia = order.indexOf(a); const ib = order.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
 
   const current = sel.value || '';
 
   sel.innerHTML =
-    `<option value="">Все размеры</option>` +
+    <option value="">Все размеры</option> +
     sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
@@ -258,7 +275,7 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const arr = Array.isArray(p.sizes) ? p.sizes : [];
   if (arr.length) return arr.includes(selectedSize);
   // fallback на старые записи, где sizes ещё пустой
-  return String(p.size || '') === selectedSize;
+  return String(p.size || '').split(',').map(x => x.trim()).includes(selectedSize);
 }));
 });
 
