@@ -254,7 +254,12 @@ function afterRenderAttachHandlers(products) {
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = e.target.value;
   if (!selectedSize) return renderProducts(allProducts);
-  renderProducts(allProducts.filter((p) => p.size === selectedSize));
+  renderProducts(allProducts.filter((p) => {
+  const arr = Array.isArray(p.sizes) ? p.sizes : [];
+  if (arr.length) return arr.includes(selectedSize);
+  // fallback на старые записи, где sizes ещё пустой
+  return String(p.size || '') === selectedSize;
+}));
 });
 
 // ===== Lightbox =====
