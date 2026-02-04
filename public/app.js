@@ -78,15 +78,6 @@ function populateSizeFilter(products) {
   sel.value = sizes.includes(current) ? current : '';
 }
 
-function sanitizeDesc(desc) {
-  // как раньше: переносы строк превращаем в пробелы, чистим лишние пробелы
-  const s = String(desc ?? '')
-    .replace(/\s*\n+\s*/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return s;
-}
-
 async function loadProducts() {
   const loading = document.getElementById('loading');
   const productsContainer = document.getElementById('products');
@@ -106,30 +97,17 @@ async function loadProducts() {
     }
   } catch (error) {
     console.error('Error loading products:', error);
-    if (productsContainer) {
-      productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
-    }
+    if (productsContainer) productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
     if (emptyState) emptyState.style.display = 'none';
   } finally {
     if (loading) loading.style.display = 'none';
   }
 }
 
-// ===== Description block (2 lines + "Подробнее" chip only when overflow) =====
-function buildDescriptionHtml(product) {
-  const desc = sanitizeDesc(product?.description);
-  if (!desc) return '';
-
-  return `
-    <div class="desc-wrap">
-      <p class="product-description product-description--clamped">
-        ${escapeHtml(desc)}
-      </p>
-      <button class="more-btn" type="button" hidden>
-        Подробнее <span class="more-ico">›</span>
-      </button>
-    </div>
-  `;
+function normalizeDescription(desc) {
+  const raw = desc == null ? '' : String(desc);
+  // ✅ как раньше: убираем переносы строк, чтобы карточка не “рвалась”
+  return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function createProductCard(product) {
@@ -163,6 +141,16 @@ function createProductCard(product) {
     ? product.sizes.map(normalizeSizeForUi).join(', ')
     : (product.size || '');
 
+  const desc = normalizeDescription(product.description);
+  const descHtml = desc ? `
+    <div class="desc-wrap">
+      <p class="product-description">${escapeHtml(desc)}</p>
+      <span class="desc-more" role="button" tabindex="0" aria-label="Показать описание">
+        <span class="desc-ellipsis">…</span> Подробнее
+      </span>
+    </div>
+  ` : '';
+
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -181,7 +169,7 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${buildDescriptionHtml(product)}
+        ${descHtml}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -220,6 +208,7 @@ function renderProducts(products) {
   }
 
   afterRenderAttachHandlers(products);
+  setupDescriptionMore(); // ✅ важно: после рендера
 }
 
 function handleBuy(product) {
@@ -240,13 +229,12 @@ function handleBuy(product) {
 }
 
 function scrollCarouselToIndex(slidesEl, idx) {
-  const w = slidesEl.clientWidth || 1;
+  const w = slidesEl.clientWidth;
   slidesEl.scrollTo({ left: idx * w, behavior: 'smooth' });
 }
 
 function getCarouselIndex(slidesEl) {
-  const w = slidesEl.clientWidth || 1;
-  return Math.round(slidesEl.scrollLeft / w);
+  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
 }
 
 function setDotsActive(carouselEl, idx) {
@@ -315,35 +303,52 @@ function afterRenderAttachHandlers(products) {
       if (urls.length) openLightbox(urls, startIdx);
     });
   });
+}
 
-  // ===== "Подробнее" показываем только если реально обрезалось =====
-  document.querySelectorAll('.product-card').forEach((card) => {
-    const p = card.querySelector('.product-description');
-    const btn = card.querySelector('.more-btn');
-    if (!p || !btn) return;
+/* ===== "Подробнее" logic ===== */
 
-    const isClamped = () => p.scrollHeight > p.clientHeight + 1;
+function isClamped(el) {
+  // если текст визуально обрезан (scrollHeight больше клиентской высоты)
+  return el.scrollHeight - el.clientHeight > 2;
+}
 
-    requestAnimationFrame(() => {
-      btn.hidden = !isClamped();
-    });
+function setupDescriptionMore() {
+  // после вставки в DOM и применения шрифтов
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.product-card').forEach((card) => {
+      const p = card.querySelector('.product-description');
+      const more = card.querySelector('.desc-more');
+      if (!p || !more) return;
 
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      card.classList.toggle('expanded');
-      const expanded = card.classList.contains('expanded');
+      // по умолчанию прячем
+      more.style.display = 'none';
 
-      if (expanded) {
-        p.classList.remove('product-description--clamped');
-        btn.innerHTML = `Свернуть <span class="more-ico">‹</span>`;
-        btn.hidden = false;
-      } else {
-        p.classList.add('product-description--clamped');
-        btn.innerHTML = `Подробнее <span class="more-ico">›</span>`;
-        requestAnimationFrame(() => {
-          btn.hidden = !isClamped();
-        });
-      }
+      // если не обрезан — ничего не показываем
+      if (!isClamped(p)) return;
+
+      // если обрезан — показываем "… Подробнее"
+      more.style.display = 'inline-flex';
+
+      const toggle = () => {
+        card.classList.toggle('expanded');
+        // при свёртывании обратно — снова проверяем (на всякий)
+        if (!card.classList.contains('expanded')) {
+          more.style.display = isClamped(p) ? 'inline-flex' : 'none';
+        }
+      };
+
+      more.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggle();
+      });
+
+      more.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
     });
   });
 }
@@ -354,7 +359,10 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   if (!selectedSize) return renderProducts(allProducts);
 
   renderProducts(allProducts.filter((p) => {
-    const arr = Array.isArray(p.sizes) ? p.sizes.map(normalizeSizeForUi) : [];
+    const arr = Array.isArray(p.sizes)
+      ? p.sizes.map(normalizeSizeForUi)
+      : [];
+
     if (arr.length) return arr.includes(selectedSize);
 
     return String(p.size || '')
