@@ -198,9 +198,9 @@ header h1 {
   overflow: hidden;
 }
 
-/* резервируем место справа, чтобы "… Подробнее" не наезжало на текст */
+/* резерв справа, чтобы кнопка не наезжала на текст */
 .desc-wrap.has-more .product-description{
-  padding-right: 110px; /* при желании 96–120 */
+  padding-right: 110px; /* можно 96–120 */
 }
 
 .product-card.expanded .product-description{
@@ -209,15 +209,14 @@ header h1 {
   overflow: visible;
 }
 
-/* "… Подробнее" — это КНОПКА, поэтому делаем reset, иначе будет белая */
+/* кнопка "… Подробнее" — без белого фона (reset), не переносится */
 .desc-more{
   position: absolute;
   right: 0;
   bottom: 0;
 
-  display: none; /* показываем только если реально обрезано (через JS) */
+  display: none; /* включаем только если реально обрезано */
 
-  /* reset button look */
   appearance: none;
   -webkit-appearance: none;
   border: 0;
@@ -227,7 +226,6 @@ header h1 {
   margin: 0;
   border-radius: 0;
 
-  /* layout */
   height: 1.45em;
   line-height: 1.45em;
   white-space: nowrap;
@@ -239,7 +237,6 @@ header h1 {
   cursor: pointer;
   user-select: none;
 
-  /* “стёртый” край слева, чтобы выглядело как продолжение строки */
   padding-left: 22px;
   background: linear-gradient(to right, rgba(26,26,26,0), #1a1a1a 60%);
 
@@ -258,7 +255,6 @@ header h1 {
   transform: translateY(1px);
 }
 
-/* в раскрытом виде "Подробнее" не показываем */
 .product-card.expanded .desc-more{
   display: none !important;
 }
