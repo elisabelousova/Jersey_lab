@@ -160,16 +160,16 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-       ${(() => {
+${(() => {
   const desc = product.description ? String(product.description).trim() : '';
-  const showMore = desc.length > 140; // порог
+  const showMore = desc.length > 140;
   return desc ? `
     <div class="desc-wrap">
       <p class="product-description">${escapeHtml(desc)}</p>
-      ${showMore ? `<div class="desc-fade"></div>` : ``}
+      ${showMore ? <div class="desc-fade"></div> : ``}
     </div>
-    ${showMore ? `<button class="more-btn" type="button">Подробнее</button>` : ``}
-  ` : ``;
+    ${showMore ? <button class="more-btn" type="button">Подробнее</button> : ``}
+   : `;
 })()}
 
         <div class="product-footer">
