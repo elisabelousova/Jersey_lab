@@ -50,13 +50,10 @@ function populateSizeFilter(products) {
   const set = new Set();
 
   for (const p of products || []) {
-    // основной вариант: sizes = ["M","L","XL"]
     if (Array.isArray(p.sizes) && p.sizes.length) {
       p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
       continue;
     }
-
-    // fallback: size строкой "M, L, XL"
     if (p.size) {
       String(p.size)
         .split(',')
@@ -64,7 +61,7 @@ function populateSizeFilter(products) {
         .filter(Boolean)
         .forEach((s) => set.add(normalizeSizeForUi(s)));
     }
-  } // ✅ вот этой скобки у тебя не было
+  }
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
@@ -74,12 +71,20 @@ function populateSizeFilter(products) {
 
   const current = sel.value || '';
 
-  // ✅ обязательно строка в backticks/кавычках
-sel.innerHTML =
-  `<option value="">Все размеры</option>` +
-  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.innerHTML =
+    `<option value="">Все размеры</option>` +
+    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
+}
+
+function sanitizeDesc(desc) {
+  // как раньше: переносы строк превращаем в пробелы, чистим лишние пробелы
+  const s = String(desc ?? '')
+    .replace(/\s*\n+\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return s;
 }
 
 async function loadProducts() {
@@ -92,25 +97,43 @@ async function loadProducts() {
     const data = await response.json();
 
     if (data.ok && Array.isArray(data.products)) {
-  allProducts = data.products;
-  populateSizeFilter(allProducts);
-  renderProducts(allProducts);
-}else {
+      allProducts = data.products;
+      populateSizeFilter(allProducts);
+      renderProducts(allProducts);
+    } else {
       console.log('API response:', data);
       throw new Error('Bad API response');
     }
   } catch (error) {
     console.error('Error loading products:', error);
-    productsContainer.innerHTML =
-      '<p class="error-text">Ошибка загрузки товаров</p>';
-    emptyState.style.display = 'none';
+    if (productsContainer) {
+      productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
+    }
+    if (emptyState) emptyState.style.display = 'none';
   } finally {
-    loading.style.display = 'none';
+    if (loading) loading.style.display = 'none';
   }
 }
 
+// ===== Description block (2 lines + "Подробнее" chip only when overflow) =====
+function buildDescriptionHtml(product) {
+  const desc = sanitizeDesc(product?.description);
+  if (!desc) return '';
+
+  return `
+    <div class="desc-wrap">
+      <p class="product-description product-description--clamped">
+        ${escapeHtml(desc)}
+      </p>
+      <button class="more-btn" type="button" hidden>
+        Подробнее <span class="more-ico">›</span>
+      </button>
+    </div>
+  `;
+}
+
 function createProductCard(product) {
- const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
+  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
   const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
 
   const slidesHtml = photoUrls.map((url, idx) => `
@@ -136,6 +159,10 @@ function createProductCard(product) {
     <button class="car-arrow car-next" type="button" aria-label="Следующее фото">›</button>
   ` : '';
 
+  const sizeText = Array.isArray(product.sizes) && product.sizes.length
+    ? product.sizes.map(normalizeSizeForUi).join(', ')
+    : (product.size || '');
+
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -150,17 +177,11 @@ function createProductCard(product) {
         <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
 
         <div class="product-meta">
-        <span class="product-size">📏 ${
-  escapeHtml(
-    Array.isArray(product.sizes) && product.sizes.length
-      ? product.sizes.map(normalizeSizeForUi).join(', ')
-      : (product.size || '')
-  )
-}</span>
+          <span class="product-size">📏 ${escapeHtml(sizeText)}</span>
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
+        ${buildDescriptionHtml(product)}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -176,9 +197,9 @@ function renderProducts(products) {
   const emptyState = document.getElementById('empty');
   const count = document.getElementById('count');
 
-  if (!products.length) {
-    productsContainer.innerHTML = '';
-    emptyState.style.display = 'block';
+  if (!products || !products.length) {
+    if (productsContainer) productsContainer.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
 
     const btn = document.getElementById('openChannelEmpty');
@@ -187,14 +208,17 @@ function renderProducts(products) {
     return;
   }
 
-  emptyState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
 
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
   }
 
-  productsContainer.innerHTML = products.map(createProductCard).join('');
+  if (productsContainer) {
+    productsContainer.innerHTML = products.map(createProductCard).join('');
+  }
+
   afterRenderAttachHandlers(products);
 }
 
@@ -216,12 +240,13 @@ function handleBuy(product) {
 }
 
 function scrollCarouselToIndex(slidesEl, idx) {
-  const w = slidesEl.clientWidth;
+  const w = slidesEl.clientWidth || 1;
   slidesEl.scrollTo({ left: idx * w, behavior: 'smooth' });
 }
 
 function getCarouselIndex(slidesEl) {
-  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
+  const w = slidesEl.clientWidth || 1;
+  return Math.round(slidesEl.scrollLeft / w);
 }
 
 function setDotsActive(carouselEl, idx) {
@@ -290,23 +315,48 @@ function afterRenderAttachHandlers(products) {
       if (urls.length) openLightbox(urls, startIdx);
     });
   });
+
+  // ===== "Подробнее" показываем только если реально обрезалось =====
+  document.querySelectorAll('.product-card').forEach((card) => {
+    const p = card.querySelector('.product-description');
+    const btn = card.querySelector('.more-btn');
+    if (!p || !btn) return;
+
+    const isClamped = () => p.scrollHeight > p.clientHeight + 1;
+
+    requestAnimationFrame(() => {
+      btn.hidden = !isClamped();
+    });
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      card.classList.toggle('expanded');
+      const expanded = card.classList.contains('expanded');
+
+      if (expanded) {
+        p.classList.remove('product-description--clamped');
+        btn.innerHTML = `Свернуть <span class="more-ico">‹</span>`;
+        btn.hidden = false;
+      } else {
+        p.classList.add('product-description--clamped');
+        btn.innerHTML = `Подробнее <span class="more-ico">›</span>`;
+        requestAnimationFrame(() => {
+          btn.hidden = !isClamped();
+        });
+      }
+    });
+  });
 }
 
-// Filter
 // Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = normalizeSizeForUi(e.target.value);
   if (!selectedSize) return renderProducts(allProducts);
 
   renderProducts(allProducts.filter((p) => {
-    // основной путь — sizes массив
-    const arr = Array.isArray(p.sizes)
-      ? p.sizes.map(normalizeSizeForUi)
-      : [];
-
+    const arr = Array.isArray(p.sizes) ? p.sizes.map(normalizeSizeForUi) : [];
     if (arr.length) return arr.includes(selectedSize);
 
-    // fallback для старых записей
     return String(p.size || '')
       .split(',')
       .map(x => normalizeSizeForUi(x))
@@ -399,75 +449,3 @@ lb?.addEventListener('touchend', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
 });
-
-public/index.html
-
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jersey Lab Catalog</title>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-
-<body>
-  <div class="container">
-    <header class="header">
-      <div class="logo-container">
-        <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab" />
-      </div>
-
-      <h1>Jersey Lab Catalog</h1>
-      <p class="subtitle">В наличии сейчас</p>
-    </header>
-
-    <section class="filters" aria-label="Фильтры">
-      <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
-      <select id="sizeFilter" class="filter-select">
-        <option value="">Все размеры</option>
-        <option value="XS">XS</option>
-        <option value="S">S</option>
-        <option value="M">M</option>
-        <option value="L">L</option>
-        <option value="XL">XL</option>
-        <option value="2XL">2XL</option>
-        <option value="3XL">3XL</option>
-        <option value="4XL">4XL</option>
-        <option value="5XL">5XL</option>
-      </select>
-
-      <div id="count" class="count" style="display:none;"></div>
-    </section>
-
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Загружаем товары...</p>
-    </div>
-
-    <main id="products" class="products-grid" aria-live="polite"></main>
-
-    <section id="empty" class="empty" style="display:none;">
-      <p>Пока нет товаров в наличии. Новинки — в канале 👀</p>
-      <button id="openChannelEmpty" class="channel-button" type="button">
-        Открыть канал
-      </button>
-    </section>
-  </div>
-
-  <!-- Lightbox -->
-  <div id="lightbox" class="lightbox" style="display:none;" aria-hidden="true">
-    <button id="lbClose" class="lb-close" type="button" aria-label="Закрыть">✕</button>
-
-    <button id="lbPrev" class="lb-arrow lb-prev" type="button" aria-label="Предыдущее фото">‹</button>
-    <img id="lbImg" class="lb-img" alt="Фото товара" />
-    <button id="lbNext" class="lb-arrow lb-next" type="button" aria-label="Следующее фото">›</button>
-
-    <div id="lbCounter" class="lb-counter">1 / 1</div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
