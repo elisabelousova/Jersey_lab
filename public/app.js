@@ -148,7 +148,7 @@ function createProductCard(product) {
   const descHtml = desc ? `
     <div class="desc-wrap">
       <p class="product-description">${escapeHtml(desc)}</p>
-      <button class="desc-more" type="button" aria-label="Показать описание полностью">… Подробнее</button>
+      <button class="desc-more" type="button" aria-label="Показать описание полностью">Подробнее</button>
     </div>
   ` : '';
 
