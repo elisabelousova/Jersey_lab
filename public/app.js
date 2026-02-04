@@ -54,6 +54,7 @@ function populateSizeFilter(products) {
       p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
       continue;
     }
+
     if (p.size) {
       String(p.size)
         .split(',')
@@ -106,7 +107,6 @@ async function loadProducts() {
 
 function normalizeDescription(desc) {
   const raw = desc == null ? '' : String(desc);
-  // ✅ как раньше: убираем переносы строк, чтобы карточка не “рвалась”
   return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
@@ -208,7 +208,7 @@ function renderProducts(products) {
   }
 
   afterRenderAttachHandlers(products);
-  setupDescriptionMore(); // ✅ важно: после рендера
+  setupDescriptionMore();
 }
 
 function handleBuy(product) {
@@ -305,52 +305,52 @@ function afterRenderAttachHandlers(products) {
   });
 }
 
-/* ===== "Подробнее" logic ===== */
-
+/* ===== "Подробнее" logic: show only when clamped ===== */
 function isClamped(el) {
-  // если текст визуально обрезан (scrollHeight больше клиентской высоты)
   return el.scrollHeight - el.clientHeight > 2;
 }
 
 function setupDescriptionMore() {
-  // после вставки в DOM и применения шрифтов
-  requestAnimationFrame(() => {
+  const run = () => {
     document.querySelectorAll('.product-card').forEach((card) => {
       const p = card.querySelector('.product-description');
       const more = card.querySelector('.desc-more');
       if (!p || !more) return;
 
-      // по умолчанию прячем
       more.style.display = 'none';
-
-      // если не обрезан — ничего не показываем
       if (!isClamped(p)) return;
 
-      // если обрезан — показываем "… Подробнее"
       more.style.display = 'inline-flex';
 
       const toggle = () => {
         card.classList.toggle('expanded');
-        // при свёртывании обратно — снова проверяем (на всякий)
         if (!card.classList.contains('expanded')) {
           more.style.display = isClamped(p) ? 'inline-flex' : 'none';
         }
       };
 
-      more.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggle();
-      });
+      if (!more.dataset.bound) {
+        more.dataset.bound = '1';
 
-      more.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        more.addEventListener('click', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           toggle();
-        }
-      });
+        });
+
+        more.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      }
     });
-  });
+  };
+
+  requestAnimationFrame(run);
+  // Telegram иногда “перерисовывает” шрифт — повторная проверка
+  setTimeout(run, 120);
 }
 
 // Filter
@@ -427,12 +427,10 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-// click background to close
 lb?.addEventListener('click', (e) => {
   if (e.target === lb) closeLightbox();
 });
 
-// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -440,7 +438,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
-// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
