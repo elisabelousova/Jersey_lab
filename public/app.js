@@ -113,17 +113,19 @@ async function loadProducts() {
 // ---------- Description helpers (safe, no syntax traps) ----------
 
 function buildDescriptionHtml(product) {
-  const desc = product?.description ? String(product.description).trim() : '';
+  const descRaw = product?.description ? String(product.description) : '';
+  const desc = descRaw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim(); // ✅ убираем переносы
+
   if (!desc) return '';
 
-  const showMore = desc.length > 140;
+  // кнопка всегда видна, но можно скрывать для совсем коротких описаний
+  const showMore = desc.length > 80;
 
   return `
     <div class="desc-wrap">
       <p class="product-description">${escapeHtml(desc)}</p>
-      ${showMore ? `<div class="desc-fade"></div>` : ``}
+      ${showMore ? `<button class="more-link" type="button">Подробнее</button>` : ``}
     </div>
-    ${showMore ? `<button class="more-btn" type="button">Подробнее</button>` : ``}
   `;
 }
 
@@ -311,10 +313,9 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // More / Collapse description
+  // More / Collapse description (2-line clamp)
   document.querySelectorAll('.product-card').forEach((card) => {
-    const btn = card.querySelector('.more-btn');
-    const fade = card.querySelector('.desc-fade');
+    const btn = card.querySelector('.more-link');
     if (!btn) return;
 
     btn.addEventListener('click', (e) => {
@@ -322,7 +323,6 @@ function afterRenderAttachHandlers(products) {
       card.classList.toggle('expanded');
       const expanded = card.classList.contains('expanded');
       btn.textContent = expanded ? 'Свернуть' : 'Подробнее';
-      if (fade) fade.style.display = expanded ? 'none' : 'block';
     });
   });
 }
