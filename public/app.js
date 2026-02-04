@@ -11,7 +11,7 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.ready();
   tg.expand();
   try {
-    // у тебя тёмный фон — не трогаем белый хедер
+    // у тебя тёмный фон — НЕ задаём белые цвета
     // tg.setHeaderColor('#ffffff');
     // tg.setBottomBarColor('#ffffff');
   } catch (e) {}
@@ -51,13 +51,11 @@ function populateSizeFilter(products) {
   const set = new Set();
 
   for (const p of products || []) {
-    // основной вариант: sizes = ["M","L","XL"]
     if (Array.isArray(p.sizes) && p.sizes.length) {
       p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
       continue;
     }
 
-    // fallback: size строкой "M, L, XL"
     if (p.size) {
       String(p.size)
         .split(',')
@@ -101,31 +99,40 @@ async function loadProducts() {
     }
   } catch (error) {
     console.error('Error loading products:', error);
-    if (productsContainer) {
-      productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
-    }
+    if (productsContainer) productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
     if (emptyState) emptyState.style.display = 'none';
   } finally {
     if (loading) loading.style.display = 'none';
   }
 }
 
-// ---------- Description helpers (safe, no syntax traps) ----------
+// ---------- Description (2 lines + inline "Подробнее") ----------
+
+function sanitizeDesc(raw) {
+  // ✅ стираем переносы строк и лишние пробелы
+  return String(raw || '')
+    .replace(/\s*\n+\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function buildDescriptionHtml(product) {
-  const descRaw = product?.description ? String(product.description) : '';
-  const desc = descRaw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim(); // ✅ убираем переносы
-
+  const desc = sanitizeDesc(product?.description);
   if (!desc) return '';
 
-  // кнопка всегда видна, но можно скрывать для совсем коротких описаний
-  const showMore = desc.length > 80;
+  // порог: показывать "Подробнее" только если реально длинно
+  const showMore = desc.length > 90;
 
+  if (!showMore) {
+    return `<p class="product-description">${escapeHtml(desc)}</p>`;
+  }
+
+  // ✅ "Подробнее" внутри того же <p>, чтобы было “текст… Подробнее”
   return `
-    <div class="desc-wrap">
-      <p class="product-description">${escapeHtml(desc)}</p>
-      ${showMore ? `<button class="more-link" type="button">Подробнее</button>` : ``}
-    </div>
+    <p class="product-description product-description--clamped">
+      <span class="desc-text">${escapeHtml(desc)}</span>
+      <span class="more-inline" role="button" tabindex="0">Подробнее</span>
+    </p>
   `;
 }
 
@@ -212,10 +219,7 @@ function renderProducts(products) {
     count.textContent = `Найдено: ${products.length}`;
   }
 
-  if (productsContainer) {
-    productsContainer.innerHTML = products.map(createProductCard).join('');
-  }
-
+  if (productsContainer) productsContainer.innerHTML = products.map(createProductCard).join('');
   afterRenderAttachHandlers(products);
 }
 
@@ -261,7 +265,7 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // Carousel scroll => update dots
+  // Carousel
   document.querySelectorAll('.carousel').forEach((carouselEl) => {
     const slidesEl = carouselEl.querySelector('.slides');
     if (!slidesEl) return;
@@ -271,7 +275,6 @@ function afterRenderAttachHandlers(products) {
       setDotsActive(carouselEl, idx);
     }, { passive: true });
 
-    // Arrows
     const prevBtn = carouselEl.querySelector('.car-prev');
     const nextBtn = carouselEl.querySelector('.car-next');
 
@@ -300,7 +303,7 @@ function afterRenderAttachHandlers(products) {
     }
   });
 
-  // Click photo => open lightbox
+  // Lightbox
   document.querySelectorAll('.product-photo').forEach((imgEl) => {
     imgEl.addEventListener('click', (e) => {
       e.preventDefault();
@@ -313,16 +316,21 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // More / Collapse description (2-line clamp)
+  // Inline "Подробнее" => expand (без кнопок, без переноса)
   document.querySelectorAll('.product-card').forEach((card) => {
-    const btn = card.querySelector('.more-link');
-    if (!btn) return;
+    const more = card.querySelector('.more-inline');
+    if (!more) return;
 
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      card.classList.toggle('expanded');
-      const expanded = card.classList.contains('expanded');
-      btn.textContent = expanded ? 'Свернуть' : 'Подробнее';
+    const activate = () => {
+      card.classList.add('expanded');
+      more.style.display = 'none';
+      const p = card.querySelector('.product-description');
+      p?.classList.remove('product-description--clamped');
+    };
+
+    more.addEventListener('click', (e) => { e.preventDefault(); activate(); });
+    more.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
     });
   });
 }
@@ -398,12 +406,8 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-// click background to close
-lb?.addEventListener('click', (e) => {
-  if (e.target === lb) closeLightbox();
-});
+lb?.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
 
-// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -411,7 +415,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
-// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
