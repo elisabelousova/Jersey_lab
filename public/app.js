@@ -11,9 +11,8 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.ready();
   tg.expand();
   try {
-    // У тебя тёмная тема — не форсим белые цвета
-    // tg.setHeaderColor('#ffffff');
-    // tg.setBottomBarColor('#ffffff');
+    tg.setHeaderColor('#ffffff');
+    tg.setBottomBarColor('#ffffff');
   } catch (e) {}
 }
 
@@ -44,13 +43,6 @@ function normalizeSizeForUi(s) {
   return t;
 }
 
-function normalizeDesc(desc) {
-  return String(desc || '')
-    .replace(/\s*\n+\s*/g, ' ')  // ✅ убираем переносы строк
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 function populateSizeFilter(products) {
   const sel = document.getElementById('sizeFilter');
   if (!sel) return;
@@ -74,14 +66,17 @@ function populateSizeFilter(products) {
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
-    const ia = order.indexOf(a); const ib = order.indexOf(b);
+    const ia = order.indexOf(a);
+    const ib = order.indexOf(b);
     return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
   });
 
   const current = sel.value || '';
+
   sel.innerHTML =
     `<option value="">Все размеры</option>` +
     sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+
   sel.value = sizes.includes(current) ? current : '';
 }
 
@@ -111,18 +106,10 @@ async function loadProducts() {
   }
 }
 
-function buildDescriptionBlock(product) {
-  const desc = normalizeDesc(product?.description || '');
-  if (!desc) return '';
-
-  // Важно: кнопку рендерим всегда, но скрываем CSS-ом.
-  // Потом JS покажет её только если реально есть overflow.
-  return `
-    <div class="desc-wrap">
-      <p class="product-description">${escapeHtml(desc)}</p>
-      <button class="more-link" type="button" aria-label="Показать полностью">Подробнее</button>
-    </div>
-  `;
+function cleanDescription(desc) {
+  const raw = desc ? String(desc) : '';
+  // как раньше: убираем переносы, чтобы было аккуратно
+  return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function createProductCard(product) {
@@ -156,6 +143,15 @@ function createProductCard(product) {
     ? product.sizes.map(normalizeSizeForUi).join(', ')
     : (product.size || '');
 
+  const desc = cleanDescription(product.description);
+
+  const descHtml = desc ? `
+    <div class="desc-wrap">
+      <p class="product-description">${escapeHtml(desc)}</p>
+      <button class="desc-more" type="button" aria-label="Показать описание полностью">… Подробнее</button>
+    </div>
+  ` : '';
+
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -174,7 +170,7 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${buildDescriptionBlock(product)}
+        ${descHtml}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -197,10 +193,12 @@ function renderProducts(products) {
 
     const btn = document.getElementById('openChannelEmpty');
     if (btn) btn.onclick = openChannel;
+
     return;
   }
 
   if (emptyState) emptyState.style.display = 'none';
+
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
@@ -271,8 +269,10 @@ function afterRenderAttachHandlers(products) {
         e.preventDefault();
         e.stopPropagation();
         const idx = getCarouselIndex(slidesEl);
-        const total = carouselEl.querySelectorAll('.dot').length || 1;
-        scrollCarouselToIndex(slidesEl, (idx - 1 + total) % total);
+        const dots = carouselEl.querySelectorAll('.dot');
+        const total = dots.length || 1;
+        const nextIdx = (idx - 1 + total) % total;
+        scrollCarouselToIndex(slidesEl, nextIdx);
       });
     }
 
@@ -281,8 +281,10 @@ function afterRenderAttachHandlers(products) {
         e.preventDefault();
         e.stopPropagation();
         const idx = getCarouselIndex(slidesEl);
-        const total = carouselEl.querySelectorAll('.dot').length || 1;
-        scrollCarouselToIndex(slidesEl, (idx + 1) % total);
+        const dots = carouselEl.querySelectorAll('.dot');
+        const total = dots.length || 1;
+        const nextIdx = (idx + 1) % total;
+        scrollCarouselToIndex(slidesEl, nextIdx);
       });
     }
   });
@@ -300,30 +302,29 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // ✅ Description “Подробнее” only if overflow + no overlap
-  document.querySelectorAll('.desc-wrap').forEach((wrap) => {
-    const p = wrap.querySelector('.product-description');
-    const btn = wrap.querySelector('.more-link');
-    const card = wrap.closest('.product-card');
-    if (!p || !btn || !card) return;
+  // ---- "… Подробнее" (только если реально обрезано) + раскрытие ----
+  document.querySelectorAll('.product-card').forEach((card) => {
+    const wrap = card.querySelector('.desc-wrap');
+    const p = card.querySelector('.product-description');
+    const btn = card.querySelector('.desc-more');
+    if (!wrap || !p || !btn) return;
 
-    // В свернутом виде p уже line-clamp:2, поэтому scrollHeight будет больше clientHeight при overflow
-    const isOverflowing = p.scrollHeight > p.clientHeight + 1;
+    // line-clamp: проверка, что текст реально обрезан
+    const isClamped = p.scrollHeight > p.clientHeight + 1;
 
-    if (!isOverflowing) {
-      btn.style.display = 'none';
+    if (isClamped) {
+      wrap.classList.add('has-more');
+      btn.style.display = 'inline-flex';
+    } else {
       wrap.classList.remove('has-more');
+      btn.style.display = 'none';
       return;
     }
 
-    btn.style.display = 'inline';
-    wrap.classList.add('has-more');
-
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      card.classList.toggle('expanded');
-      const expanded = card.classList.contains('expanded');
-      btn.textContent = expanded ? 'Свернуть' : 'Подробнее';
+      card.classList.add('expanded');
+      btn.style.display = 'none';
     });
   });
 }
@@ -399,8 +400,12 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-lb?.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+// click background to close
+lb?.addEventListener('click', (e) => {
+  if (e.target === lb) closeLightbox();
+});
 
+// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -408,6 +413,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
+// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
@@ -420,6 +426,7 @@ lb?.addEventListener('touchend', (e) => {
   if (dx > 0) prevLb(); else nextLb();
 }, { passive: true });
 
+// Start
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
 });
