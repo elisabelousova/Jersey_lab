@@ -177,70 +177,79 @@ header h1 {
   font-weight: 800;
 }
 
-/* ===== DESCRIPTION: 2 lines + "… Подробнее" справа в конце ===== */
+/* ===== DESCRIPTION: 2 lines + "… Подробнее" справа на 2-й строке ===== */
 .desc-wrap{
   position: relative;
   margin-bottom: 12px;
 }
 
-/* текст: маленький, аккуратный, без сохранения переносов (как раньше) */
 .product-description{
   font-size: 13px;
   color: #b0b0b0;
   line-height: 1.45;
   margin: 0;
 
-  white-space: normal;            /* ✅ переносы из БД НЕ сохраняем */
+  white-space: normal;     /* ✅ переносы из БД не сохраняем */
   word-break: break-word;
 
   display: -webkit-box;
-  -webkit-line-clamp: 2;          /* ✅ ровно 2 строки */
+  -webkit-line-clamp: 2;   /* ✅ ровно 2 строки */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* раскрытие */
 .product-card.expanded .product-description{
   display: block;
   -webkit-line-clamp: unset;
   overflow: visible;
 }
 
-/* overlay-градиент под "Подробнее" (чтобы текст не залезал под слово) */
+/* текстовый “линк” без плашки, на фоне карточки */
 .desc-more{
   position: absolute;
   right: 0;
   bottom: 0;
 
-  display: none;                  /* показываем только если реально обрезано */
+  display: none; /* включаем только если реально обрезано */
   align-items: center;
   gap: 6px;
 
-  padding-left: 18px;             /* место под градиент */
-  height: 1.45em;                 /* высота строки */
+  padding-left: 18px;               /* место под градиент */
+  height: 1.45em;                   /* высота строки */
   line-height: 1.45em;
 
   font-size: 12px;
   font-weight: 800;
   color: #9a9a9a;
 
-  background: linear-gradient(to right, rgba(26,26,26,0), #1a1a1a 55%); /* ✅ фон карточки */
+  /* ✅ тот же фон, что у карточки */
+  background: linear-gradient(to right, rgba(26,26,26,0), #1a1a1a 55%);
+
   cursor: pointer;
   user-select: none;
+
+  /* ✅ отличаем: underline */
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(154,154,154,0.65);
 }
 
-/* точечки выглядят аккуратно */
 .desc-ellipsis{
   color: #8a8a8a;
   font-weight: 900;
+  text-decoration: none;
 }
 
-/* hover — чуть светлее, но без “кнопочности” */
 .desc-more:hover{
   color: #cfcfcf;
+  text-decoration-color: rgba(207,207,207,0.75);
 }
 
-/* при раскрытии прячем "Подробнее" */
+.desc-more:active{
+  transform: translateY(1px);
+}
+
 .product-card.expanded .desc-more{
   display: none !important;
 }
