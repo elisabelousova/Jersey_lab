@@ -178,17 +178,27 @@ header h1 {
 }
 
 .product-description{
-  white-space: pre-line;          /* чтобы переносы \n были видны */
+  white-space: pre-line; /* переносы строк из БД */
   display: -webkit-box;
-  -webkit-line-clamp: 3;          /* сколько строк в карточке */
+  -webkit-line-clamp: 3; /* сколько строк в карточке */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .product-card.expanded .product-description{
-  -webkit-line-clamp: unset;
   display: block;
+  -webkit-line-clamp: unset;
   overflow: visible;
+}
+
+.more-btn{
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 6px;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .product-footer {
