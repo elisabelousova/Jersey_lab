@@ -177,15 +177,18 @@ header h1 {
   font-weight: 800;
 }
 
-.product-description {
-  font-size: 13px;
-  color: #b0b0b0;
-  margin-bottom: 12px;
-  line-height: 1.45;
+.product-description{
+  white-space: pre-line;          /* чтобы переносы \n были видны */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;          /* сколько строк в карточке */
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.product-card.expanded .product-description{
+  -webkit-line-clamp: unset;
+  display: block;
+  overflow: visible;
 }
 
 .product-footer {
