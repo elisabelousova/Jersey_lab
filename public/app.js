@@ -160,7 +160,14 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
+        ${(() => {
+  const desc = product.description ? String(product.description) : '';
+  const showMore = desc.length > 140; // порог, можешь поставить 120/180
+  return desc ? `
+    <p class="product-description">${escapeHtml(desc)}</p>
+    ${showMore ? `<button class="more-btn" type="button" data-product-id="${escapeAttr(product.id)}">Подробнее</button>` : ``}
+  ` : ``;
+})()}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -288,6 +295,17 @@ function afterRenderAttachHandlers(products) {
       const product = products.find((p) => String(p.id) === String(productId));
       const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 8) : [];
       if (urls.length) openLightbox(urls, startIdx);
+    });
+  });
+
+    // More / Collapse description
+  document.querySelectorAll('.more-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const card = e.currentTarget.closest('.product-card');
+      if (!card) return;
+      card.classList.toggle('expanded');
+      e.currentTarget.textContent = card.classList.contains('expanded') ? 'Свернуть' : 'Подробнее';
     });
   });
 }
