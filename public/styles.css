@@ -481,3 +481,37 @@ header h1 {
   font-weight: 800;
   font-size: 12px;
 }
+
+/* --- Description block (dark theme) --- */
+.desc-wrap{
+  position: relative;
+  margin-top: 8px;
+}
+
+.desc-fade{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 44px;
+  pointer-events: none;
+  /* под твой фон карточки #1a1a1a */
+  background: linear-gradient(to bottom, rgba(26,26,26,0), rgba(26,26,26,1));
+}
+
+.more-btn{
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.product-card.expanded .more-btn{
+  background: rgba(255,255,255,0.1);
+}
