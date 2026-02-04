@@ -198,9 +198,9 @@ header h1 {
   overflow: hidden;
 }
 
-/* резервируем место справа, чтобы “Подробнее” не наезжало */
+/* резервируем место справа, чтобы "… Подробнее" не наезжало на текст */
 .desc-wrap.has-more .product-description{
-  padding-right: 108px; /* можно подкрутить 96–120 */
+  padding-right: 110px; /* при желании 96–120 */
 }
 
 .product-card.expanded .product-description{
@@ -209,21 +209,28 @@ header h1 {
   overflow: visible;
 }
 
-/* “... Подробнее” — справа в конце 2-й строки, на фоне карточки */
+/* "… Подробнее" — это КНОПКА, поэтому делаем reset, иначе будет белая */
 .desc-more{
   position: absolute;
   right: 0;
   bottom: 0;
 
-  display: none;                 /* покажем через JS только если есть обрезка */
-  align-items: center;
-  gap: 6px;
+  display: none; /* показываем только если реально обрезано (через JS) */
 
+  /* reset button look */
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+
+  /* layout */
   height: 1.45em;
   line-height: 1.45em;
-
-  padding-left: 18px;            /* место под градиент */
-  background: linear-gradient(to right, rgba(26,26,26,0), #1a1a1a 58%);
+  white-space: nowrap;
 
   font-size: 12px;
   font-weight: 800;
@@ -232,16 +239,14 @@ header h1 {
   cursor: pointer;
   user-select: none;
 
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-  text-decoration-color: rgba(154,154,154,0.65);
-}
+  /* “стёртый” край слева, чтобы выглядело как продолжение строки */
+  padding-left: 22px;
+  background: linear-gradient(to right, rgba(26,26,26,0), #1a1a1a 60%);
 
-.desc-ellipsis{
-  color: #8a8a8a;
-  font-weight: 900;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(154,154,154,0.65);
 }
 
 .desc-more:hover{
@@ -253,7 +258,7 @@ header h1 {
   transform: translateY(1px);
 }
 
-/* в раскрытом виде прячем “Подробнее” */
+/* в раскрытом виде "Подробнее" не показываем */
 .product-card.expanded .desc-more{
   display: none !important;
 }
