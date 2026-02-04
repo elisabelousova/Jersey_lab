@@ -160,12 +160,15 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${(() => {
-  const desc = product.description ? String(product.description) : '';
-  const showMore = desc.length > 140; // порог, можешь поставить 120/180
+       ${(() => {
+  const desc = product.description ? String(product.description).trim() : '';
+  const showMore = desc.length > 140; // порог
   return desc ? `
-    <p class="product-description">${escapeHtml(desc)}</p>
-    ${showMore ? `<button class="more-btn" type="button" data-product-id="${escapeAttr(product.id)}">Подробнее</button>` : ``}
+    <div class="desc-wrap">
+      <p class="product-description">${escapeHtml(desc)}</p>
+      ${showMore ? `<div class="desc-fade"></div>` : ``}
+    </div>
+    ${showMore ? `<button class="more-btn" type="button">Подробнее</button>` : ``}
   ` : ``;
 })()}
 
@@ -298,14 +301,18 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-    // More / Collapse description
-  document.querySelectorAll('.more-btn').forEach((btn) => {
+      // More / Collapse description (pretty)
+  document.querySelectorAll('.product-card').forEach((card) => {
+    const btn = card.querySelector('.more-btn');
+    const fade = card.querySelector('.desc-fade');
+    if (!btn) return;
+
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const card = e.currentTarget.closest('.product-card');
-      if (!card) return;
       card.classList.toggle('expanded');
-      e.currentTarget.textContent = card.classList.contains('expanded') ? 'Свернуть' : 'Подробнее';
+      const expanded = card.classList.contains('expanded');
+      btn.textContent = expanded ? 'Свернуть' : 'Подробнее';
+      if (fade) fade.style.display = expanded ? 'none' : 'block';
     });
   });
 }
