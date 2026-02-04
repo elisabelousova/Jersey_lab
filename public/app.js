@@ -11,8 +11,9 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.ready();
   tg.expand();
   try {
-    tg.setHeaderColor('#ffffff');
-    tg.setBottomBarColor('#ffffff');
+    // У тебя тёмная тема — не форсим белые цвета
+    // tg.setHeaderColor('#ffffff');
+    // tg.setBottomBarColor('#ffffff');
   } catch (e) {}
 }
 
@@ -43,6 +44,13 @@ function normalizeSizeForUi(s) {
   return t;
 }
 
+function normalizeDesc(desc) {
+  return String(desc || '')
+    .replace(/\s*\n+\s*/g, ' ')  // ✅ убираем переносы строк
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function populateSizeFilter(products) {
   const sel = document.getElementById('sizeFilter');
   if (!sel) return;
@@ -71,11 +79,9 @@ function populateSizeFilter(products) {
   });
 
   const current = sel.value || '';
-
   sel.innerHTML =
     `<option value="">Все размеры</option>` +
     sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
-
   sel.value = sizes.includes(current) ? current : '';
 }
 
@@ -105,9 +111,18 @@ async function loadProducts() {
   }
 }
 
-function normalizeDescription(desc) {
-  const raw = desc == null ? '' : String(desc);
-  return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
+function buildDescriptionBlock(product) {
+  const desc = normalizeDesc(product?.description || '');
+  if (!desc) return '';
+
+  // Важно: кнопку рендерим всегда, но скрываем CSS-ом.
+  // Потом JS покажет её только если реально есть overflow.
+  return `
+    <div class="desc-wrap">
+      <p class="product-description">${escapeHtml(desc)}</p>
+      <button class="more-link" type="button" aria-label="Показать полностью">Подробнее</button>
+    </div>
+  `;
 }
 
 function createProductCard(product) {
@@ -141,16 +156,6 @@ function createProductCard(product) {
     ? product.sizes.map(normalizeSizeForUi).join(', ')
     : (product.size || '');
 
-  const desc = normalizeDescription(product.description);
-  const descHtml = desc ? `
-    <div class="desc-wrap">
-      <p class="product-description">${escapeHtml(desc)}</p>
-      <span class="desc-more" role="button" tabindex="0" aria-label="Показать описание">
-        <span class="desc-ellipsis">…</span> Подробнее
-      </span>
-    </div>
-  ` : '';
-
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -169,7 +174,7 @@ function createProductCard(product) {
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${descHtml}
+        ${buildDescriptionBlock(product)}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -192,23 +197,17 @@ function renderProducts(products) {
 
     const btn = document.getElementById('openChannelEmpty');
     if (btn) btn.onclick = openChannel;
-
     return;
   }
 
   if (emptyState) emptyState.style.display = 'none';
-
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
   }
 
-  if (productsContainer) {
-    productsContainer.innerHTML = products.map(createProductCard).join('');
-  }
-
+  if (productsContainer) productsContainer.innerHTML = products.map(createProductCard).join('');
   afterRenderAttachHandlers(products);
-  setupDescriptionMore();
 }
 
 function handleBuy(product) {
@@ -234,7 +233,8 @@ function scrollCarouselToIndex(slidesEl, idx) {
 }
 
 function getCarouselIndex(slidesEl) {
-  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
+  const w = slidesEl.clientWidth || 1;
+  return Math.round(slidesEl.scrollLeft / w);
 }
 
 function setDotsActive(carouselEl, idx) {
@@ -271,10 +271,8 @@ function afterRenderAttachHandlers(products) {
         e.preventDefault();
         e.stopPropagation();
         const idx = getCarouselIndex(slidesEl);
-        const dots = carouselEl.querySelectorAll('.dot');
-        const total = dots.length || 1;
-        const nextIdx = (idx - 1 + total) % total;
-        scrollCarouselToIndex(slidesEl, nextIdx);
+        const total = carouselEl.querySelectorAll('.dot').length || 1;
+        scrollCarouselToIndex(slidesEl, (idx - 1 + total) % total);
       });
     }
 
@@ -283,10 +281,8 @@ function afterRenderAttachHandlers(products) {
         e.preventDefault();
         e.stopPropagation();
         const idx = getCarouselIndex(slidesEl);
-        const dots = carouselEl.querySelectorAll('.dot');
-        const total = dots.length || 1;
-        const nextIdx = (idx + 1) % total;
-        scrollCarouselToIndex(slidesEl, nextIdx);
+        const total = carouselEl.querySelectorAll('.dot').length || 1;
+        scrollCarouselToIndex(slidesEl, (idx + 1) % total);
       });
     }
   });
@@ -303,54 +299,33 @@ function afterRenderAttachHandlers(products) {
       if (urls.length) openLightbox(urls, startIdx);
     });
   });
-}
 
-/* ===== "Подробнее" logic: show only when clamped ===== */
-function isClamped(el) {
-  return el.scrollHeight - el.clientHeight > 2;
-}
+  // ✅ Description “Подробнее” only if overflow + no overlap
+  document.querySelectorAll('.desc-wrap').forEach((wrap) => {
+    const p = wrap.querySelector('.product-description');
+    const btn = wrap.querySelector('.more-link');
+    const card = wrap.closest('.product-card');
+    if (!p || !btn || !card) return;
 
-function setupDescriptionMore() {
-  const run = () => {
-    document.querySelectorAll('.product-card').forEach((card) => {
-      const p = card.querySelector('.product-description');
-      const more = card.querySelector('.desc-more');
-      if (!p || !more) return;
+    // В свернутом виде p уже line-clamp:2, поэтому scrollHeight будет больше clientHeight при overflow
+    const isOverflowing = p.scrollHeight > p.clientHeight + 1;
 
-      more.style.display = 'none';
-      if (!isClamped(p)) return;
+    if (!isOverflowing) {
+      btn.style.display = 'none';
+      wrap.classList.remove('has-more');
+      return;
+    }
 
-      more.style.display = 'inline-flex';
+    btn.style.display = 'inline';
+    wrap.classList.add('has-more');
 
-      const toggle = () => {
-        card.classList.toggle('expanded');
-        if (!card.classList.contains('expanded')) {
-          more.style.display = isClamped(p) ? 'inline-flex' : 'none';
-        }
-      };
-
-      if (!more.dataset.bound) {
-        more.dataset.bound = '1';
-
-        more.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          toggle();
-        });
-
-        more.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggle();
-          }
-        });
-      }
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      card.classList.toggle('expanded');
+      const expanded = card.classList.contains('expanded');
+      btn.textContent = expanded ? 'Свернуть' : 'Подробнее';
     });
-  };
-
-  requestAnimationFrame(run);
-  // Telegram иногда “перерисовывает” шрифт — повторная проверка
-  setTimeout(run, 120);
+  });
 }
 
 // Filter
@@ -359,10 +334,7 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   if (!selectedSize) return renderProducts(allProducts);
 
   renderProducts(allProducts.filter((p) => {
-    const arr = Array.isArray(p.sizes)
-      ? p.sizes.map(normalizeSizeForUi)
-      : [];
-
+    const arr = Array.isArray(p.sizes) ? p.sizes.map(normalizeSizeForUi) : [];
     if (arr.length) return arr.includes(selectedSize);
 
     return String(p.size || '')
@@ -427,9 +399,7 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-lb?.addEventListener('click', (e) => {
-  if (e.target === lb) closeLightbox();
-});
+lb?.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
 
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
@@ -450,7 +420,6 @@ lb?.addEventListener('touchend', (e) => {
   if (dx > 0) prevLb(); else nextLb();
 }, { passive: true });
 
-// Start
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
 });
