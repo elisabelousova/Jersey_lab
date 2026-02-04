@@ -11,9 +11,8 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.ready();
   tg.expand();
   try {
-    // у тебя тёмный фон — НЕ задаём белые цвета
-    // tg.setHeaderColor('#ffffff');
-    // tg.setBottomBarColor('#ffffff');
+    tg.setHeaderColor('#ffffff');
+    tg.setBottomBarColor('#ffffff');
   } catch (e) {}
 }
 
@@ -51,11 +50,13 @@ function populateSizeFilter(products) {
   const set = new Set();
 
   for (const p of products || []) {
+    // основной вариант: sizes = ["M","L","XL"]
     if (Array.isArray(p.sizes) && p.sizes.length) {
       p.sizes.forEach((s) => set.add(normalizeSizeForUi(s)));
       continue;
     }
 
+    // fallback: size строкой "M, L, XL"
     if (p.size) {
       String(p.size)
         .split(',')
@@ -63,7 +64,7 @@ function populateSizeFilter(products) {
         .filter(Boolean)
         .forEach((s) => set.add(normalizeSizeForUi(s)));
     }
-  }
+  } // ✅ вот этой скобки у тебя не было
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
@@ -73,9 +74,10 @@ function populateSizeFilter(products) {
 
   const current = sel.value || '';
 
-  sel.innerHTML =
-    `<option value="">Все размеры</option>` +
-    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+  // ✅ обязательно строка в backticks/кавычках
+sel.innerHTML =
+  `<option value="">Все размеры</option>` +
+  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
 }
@@ -90,54 +92,25 @@ async function loadProducts() {
     const data = await response.json();
 
     if (data.ok && Array.isArray(data.products)) {
-      allProducts = data.products;
-      populateSizeFilter(allProducts);
-      renderProducts(allProducts);
-    } else {
+  allProducts = data.products;
+  populateSizeFilter(allProducts);
+  renderProducts(allProducts);
+}else {
       console.log('API response:', data);
       throw new Error('Bad API response');
     }
   } catch (error) {
     console.error('Error loading products:', error);
-    if (productsContainer) productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
-    if (emptyState) emptyState.style.display = 'none';
+    productsContainer.innerHTML =
+      '<p class="error-text">Ошибка загрузки товаров</p>';
+    emptyState.style.display = 'none';
   } finally {
-    if (loading) loading.style.display = 'none';
+    loading.style.display = 'none';
   }
-}
-
-// ---------- Description (2 lines + inline "Подробнее") ----------
-
-function sanitizeDesc(raw) {
-  // ✅ стираем переносы строк и лишние пробелы
-  return String(raw || '')
-    .replace(/\s*\n+\s*/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function buildDescriptionHtml(product) {
-  const desc = sanitizeDesc(product?.description);
-  if (!desc) return '';
-
-  // порог: показывать "Подробнее" только если реально длинно
-  const showMore = desc.length > 90;
-
-  if (!showMore) {
-    return `<p class="product-description">${escapeHtml(desc)}</p>`;
-  }
-
-  // ✅ "Подробнее" внутри того же <p>, чтобы было “текст… Подробнее”
-  return `
-    <p class="product-description product-description--clamped">
-      <span class="desc-text">${escapeHtml(desc)}</span>
-      <span class="more-inline" role="button" tabindex="0">Подробнее</span>
-    </p>
-  `;
 }
 
 function createProductCard(product) {
-  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
+ const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
   const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
 
   const slidesHtml = photoUrls.map((url, idx) => `
@@ -163,10 +136,6 @@ function createProductCard(product) {
     <button class="car-arrow car-next" type="button" aria-label="Следующее фото">›</button>
   ` : '';
 
-  const sizeText = Array.isArray(product.sizes) && product.sizes.length
-    ? product.sizes.map(normalizeSizeForUi).join(', ')
-    : (product.size || '');
-
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -181,11 +150,17 @@ function createProductCard(product) {
         <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
 
         <div class="product-meta">
-          <span class="product-size">📏 ${escapeHtml(sizeText)}</span>
+        <span class="product-size">📏 ${
+  escapeHtml(
+    Array.isArray(product.sizes) && product.sizes.length
+      ? product.sizes.map(normalizeSizeForUi).join(', ')
+      : (product.size || '')
+  )
+}</span>
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-        ${buildDescriptionHtml(product)}
+        ${product.description ? `<p class="product-description">${escapeHtml(product.description)}</p>` : ''}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -201,9 +176,9 @@ function renderProducts(products) {
   const emptyState = document.getElementById('empty');
   const count = document.getElementById('count');
 
-  if (!products || !products.length) {
-    if (productsContainer) productsContainer.innerHTML = '';
-    if (emptyState) emptyState.style.display = 'block';
+  if (!products.length) {
+    productsContainer.innerHTML = '';
+    emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
 
     const btn = document.getElementById('openChannelEmpty');
@@ -212,14 +187,14 @@ function renderProducts(products) {
     return;
   }
 
-  if (emptyState) emptyState.style.display = 'none';
+  emptyState.style.display = 'none';
 
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
   }
 
-  if (productsContainer) productsContainer.innerHTML = products.map(createProductCard).join('');
+  productsContainer.innerHTML = products.map(createProductCard).join('');
   afterRenderAttachHandlers(products);
 }
 
@@ -246,8 +221,7 @@ function scrollCarouselToIndex(slidesEl, idx) {
 }
 
 function getCarouselIndex(slidesEl) {
-  const w = slidesEl.clientWidth || 1;
-  return Math.round(slidesEl.scrollLeft / w);
+  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
 }
 
 function setDotsActive(carouselEl, idx) {
@@ -265,7 +239,7 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // Carousel
+  // Carousel scroll => update dots
   document.querySelectorAll('.carousel').forEach((carouselEl) => {
     const slidesEl = carouselEl.querySelector('.slides');
     if (!slidesEl) return;
@@ -275,6 +249,7 @@ function afterRenderAttachHandlers(products) {
       setDotsActive(carouselEl, idx);
     }, { passive: true });
 
+    // Arrows
     const prevBtn = carouselEl.querySelector('.car-prev');
     const nextBtn = carouselEl.querySelector('.car-next');
 
@@ -303,7 +278,7 @@ function afterRenderAttachHandlers(products) {
     }
   });
 
-  // Lightbox
+  // Click photo => open lightbox
   document.querySelectorAll('.product-photo').forEach((imgEl) => {
     imgEl.addEventListener('click', (e) => {
       e.preventDefault();
@@ -315,35 +290,23 @@ function afterRenderAttachHandlers(products) {
       if (urls.length) openLightbox(urls, startIdx);
     });
   });
-
-  // Inline "Подробнее" => expand (без кнопок, без переноса)
-  document.querySelectorAll('.product-card').forEach((card) => {
-    const more = card.querySelector('.more-inline');
-    if (!more) return;
-
-    const activate = () => {
-      card.classList.add('expanded');
-      more.style.display = 'none';
-      const p = card.querySelector('.product-description');
-      p?.classList.remove('product-description--clamped');
-    };
-
-    more.addEventListener('click', (e) => { e.preventDefault(); activate(); });
-    more.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
-    });
-  });
 }
 
+// Filter
 // Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = normalizeSizeForUi(e.target.value);
   if (!selectedSize) return renderProducts(allProducts);
 
   renderProducts(allProducts.filter((p) => {
-    const arr = Array.isArray(p.sizes) ? p.sizes.map(normalizeSizeForUi) : [];
+    // основной путь — sizes массив
+    const arr = Array.isArray(p.sizes)
+      ? p.sizes.map(normalizeSizeForUi)
+      : [];
+
     if (arr.length) return arr.includes(selectedSize);
 
+    // fallback для старых записей
     return String(p.size || '')
       .split(',')
       .map(x => normalizeSizeForUi(x))
@@ -406,8 +369,12 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-lb?.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+// click background to close
+lb?.addEventListener('click', (e) => {
+  if (e.target === lb) closeLightbox();
+});
 
+// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -415,6 +382,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
+// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
@@ -431,3 +399,75 @@ lb?.addEventListener('touchend', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
 });
+
+public/index.html
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jersey Lab Catalog</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-container">
+        <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab" />
+      </div>
+
+      <h1>Jersey Lab Catalog</h1>
+      <p class="subtitle">В наличии сейчас</p>
+    </header>
+
+    <section class="filters" aria-label="Фильтры">
+      <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
+      <select id="sizeFilter" class="filter-select">
+        <option value="">Все размеры</option>
+        <option value="XS">XS</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+        <option value="2XL">2XL</option>
+        <option value="3XL">3XL</option>
+        <option value="4XL">4XL</option>
+        <option value="5XL">5XL</option>
+      </select>
+
+      <div id="count" class="count" style="display:none;"></div>
+    </section>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Загружаем товары...</p>
+    </div>
+
+    <main id="products" class="products-grid" aria-live="polite"></main>
+
+    <section id="empty" class="empty" style="display:none;">
+      <p>Пока нет товаров в наличии. Новинки — в канале 👀</p>
+      <button id="openChannelEmpty" class="channel-button" type="button">
+        Открыть канал
+      </button>
+    </section>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" style="display:none;" aria-hidden="true">
+    <button id="lbClose" class="lb-close" type="button" aria-label="Закрыть">✕</button>
+
+    <button id="lbPrev" class="lb-arrow lb-prev" type="button" aria-label="Предыдущее фото">‹</button>
+    <img id="lbImg" class="lb-img" alt="Фото товара" />
+    <button id="lbNext" class="lb-arrow lb-next" type="button" aria-label="Следующее фото">›</button>
+
+    <div id="lbCounter" class="lb-counter">1 / 1</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
