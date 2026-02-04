@@ -177,17 +177,81 @@ header h1 {
   font-weight: 800;
 }
 
-.product-description {
+/* ===== Description (2 lines + tasteful "Подробнее" chip) ===== */
+.desc-wrap{
+  margin-top: 6px;
+}
+
+/* базовый вид текста */
+.product-description{
   font-size: 13px;
   color: #b0b0b0;
-  margin-bottom: 12px;
   line-height: 1.45;
+  margin: 0;                 /* важно: чтобы chip выглядел аккуратно */
+  white-space: normal;       /* ✅ переносы строк НЕ сохраняем (как раньше) */
+  word-break: break-word;
+}
+
+/* режим "сжат" на 2 строки */
+.product-description--clamped{
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* раскрытый текст */
+.product-card.expanded .product-description{
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+/* chip "Подробнее" — не как кнопка, а как аккуратная подсказка */
+.more-btn{
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+}
+
+.more-btn:hover{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.22);
+  color: #cfcfcf;
+}
+
+.more-btn:active{
+  transform: translateY(1px);
+}
+
+.more-ico{
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+/* (опционально) при раскрытии делаем chip чуть заметнее */
+.product-card.expanded .more-btn{
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.20);
+}
+
+/* ===== Footer ===== */
 .product-footer {
   display: flex;
   justify-content: space-between;
@@ -420,4 +484,3 @@ header h1 {
   font-weight: 800;
   font-size: 12px;
 }
-=
