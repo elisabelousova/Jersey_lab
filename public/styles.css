@@ -177,36 +177,17 @@ header h1 {
   font-weight: 800;
 }
 
-/* ===== Desc "Подробнее" (dark theme) ===== */
-.desc-wrap{
-  position: relative;
-  margin-top: 8px;
-}
-
-/* оставляем твой clamp, но делаем аккуратнее и под тёмный фон */
+/* аккуратнее текст в карточке */
 .product-description{
-  white-space: pre-line;
-  margin: 0;
+  margin-top: 6px;
+  font-size: 13px;
   line-height: 1.35;
-  color: rgba(255,255,255,0.88);
-
+  color: #cfcfcf;
+  white-space: normal;              /* ✅ переносы строк не сохраняем */
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;            /* ✅ ровно 2 строки */
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* нижний fade под твой card bg (#1a1a1a) */
-.desc-fade{
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 38px;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(26,26,26,0),
-    rgba(26,26,26,1)
-  );
 }
 
 .product-card.expanded .product-description{
@@ -215,38 +196,25 @@ header h1 {
   overflow: visible;
 }
 
-/* кнопка под dark UI */
-.more-btn{
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.desc-wrap{
+  margin-top: 6px;
+}
 
-  padding: 8px 12px;
-  border-radius: 999px;
-
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.92);
-
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
+/* “Подробнее” — серая аккуратная ссылка */
+.more-link{
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8e8e8e;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
-.more-btn:hover{
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.22);
-}
-
-.more-btn:active{
+.more-link:active{
   transform: translateY(1px);
-}
-
-.product-card.expanded .more-btn{
-  background: rgba(255,255,255,0.08);
 }
 
 .product-footer {
@@ -480,38 +448,4 @@ header h1 {
   color: rgba(255,255,255,0.9);
   font-weight: 800;
   font-size: 12px;
-}
-
-/* --- Description block (dark theme) --- */
-.desc-wrap{
-  position: relative;
-  margin-top: 8px;
-}
-
-.desc-fade{
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 44px;
-  pointer-events: none;
-  /* под твой фон карточки #1a1a1a */
-  background: linear-gradient(to bottom, rgba(26,26,26,0), rgba(26,26,26,1));
-}
-
-.more-btn{
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.product-card.expanded .more-btn{
-  background: rgba(255,255,255,0.1);
 }
