@@ -11,8 +11,9 @@ if (window.Telegram && window.Telegram.WebApp) {
   tg.ready();
   tg.expand();
   try {
-    tg.setHeaderColor('#ffffff');
-    tg.setBottomBarColor('#ffffff');
+    // у тебя тёмный фон — не трогаем белый хедер
+    // tg.setHeaderColor('#ffffff');
+    // tg.setBottomBarColor('#ffffff');
   } catch (e) {}
 }
 
@@ -64,7 +65,7 @@ function populateSizeFilter(products) {
         .filter(Boolean)
         .forEach((s) => set.add(normalizeSizeForUi(s)));
     }
-  } // ✅ вот этой скобки у тебя не было
+  }
 
   const order = ['XS','S','M','L','XL','XXL','XXXL','XXXXL','XXXXXL'];
   const sizes = Array.from(set).sort((a, b) => {
@@ -74,10 +75,9 @@ function populateSizeFilter(products) {
 
   const current = sel.value || '';
 
-  // ✅ обязательно строка в backticks/кавычках
-sel.innerHTML =
-  `<option value="">Все размеры</option>` +
-  sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.innerHTML =
+    `<option value="">Все размеры</option>` +
+    sizes.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
 
   sel.value = sizes.includes(current) ? current : '';
 }
@@ -92,25 +92,43 @@ async function loadProducts() {
     const data = await response.json();
 
     if (data.ok && Array.isArray(data.products)) {
-  allProducts = data.products;
-  populateSizeFilter(allProducts);
-  renderProducts(allProducts);
-}else {
+      allProducts = data.products;
+      populateSizeFilter(allProducts);
+      renderProducts(allProducts);
+    } else {
       console.log('API response:', data);
       throw new Error('Bad API response');
     }
   } catch (error) {
     console.error('Error loading products:', error);
-    productsContainer.innerHTML =
-      '<p class="error-text">Ошибка загрузки товаров</p>';
-    emptyState.style.display = 'none';
+    if (productsContainer) {
+      productsContainer.innerHTML = '<p class="error-text">Ошибка загрузки товаров</p>';
+    }
+    if (emptyState) emptyState.style.display = 'none';
   } finally {
-    loading.style.display = 'none';
+    if (loading) loading.style.display = 'none';
   }
 }
 
+// ---------- Description helpers (safe, no syntax traps) ----------
+
+function buildDescriptionHtml(product) {
+  const desc = product?.description ? String(product.description).trim() : '';
+  if (!desc) return '';
+
+  const showMore = desc.length > 140;
+
+  return `
+    <div class="desc-wrap">
+      <p class="product-description">${escapeHtml(desc)}</p>
+      ${showMore ? `<div class="desc-fade"></div>` : ``}
+    </div>
+    ${showMore ? `<button class="more-btn" type="button">Подробнее</button>` : ``}
+  `;
+}
+
 function createProductCard(product) {
- const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
+  const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
   const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
 
   const slidesHtml = photoUrls.map((url, idx) => `
@@ -136,6 +154,10 @@ function createProductCard(product) {
     <button class="car-arrow car-next" type="button" aria-label="Следующее фото">›</button>
   ` : '';
 
+  const sizeText = Array.isArray(product.sizes) && product.sizes.length
+    ? product.sizes.map(normalizeSizeForUi).join(', ')
+    : (product.size || '');
+
   return `
     <div class="product-card" data-product-id="${escapeAttr(product.id)}">
       <div class="carousel" data-product-id="${escapeAttr(product.id)}">
@@ -150,27 +172,11 @@ function createProductCard(product) {
         <h3 class="product-title">${escapeHtml(product.title || '')}</h3>
 
         <div class="product-meta">
-        <span class="product-size">📏 ${
-  escapeHtml(
-    Array.isArray(product.sizes) && product.sizes.length
-      ? product.sizes.map(normalizeSizeForUi).join(', ')
-      : (product.size || '')
-  )
-}</span>
+          <span class="product-size">📏 ${escapeHtml(sizeText)}</span>
           ${product.season ? `<span class="product-season">📅 ${escapeHtml(product.season)}</span>` : ''}
         </div>
 
-${(() => {
-  const desc = product.description ? String(product.description).trim() : '';
-  const showMore = desc.length > 140;
-  return desc ? `
-    <div class="desc-wrap">
-      <p class="product-description">${escapeHtml(desc)}</p>
-      ${showMore ? <div class="desc-fade"></div> : ``}
-    </div>
-    ${showMore ? <button class="more-btn" type="button">Подробнее</button> : ``}
-   : `;
-})()}
+        ${buildDescriptionHtml(product)}
 
         <div class="product-footer">
           <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
@@ -186,9 +192,9 @@ function renderProducts(products) {
   const emptyState = document.getElementById('empty');
   const count = document.getElementById('count');
 
-  if (!products.length) {
-    productsContainer.innerHTML = '';
-    emptyState.style.display = 'block';
+  if (!products || !products.length) {
+    if (productsContainer) productsContainer.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
     if (count) count.style.display = 'none';
 
     const btn = document.getElementById('openChannelEmpty');
@@ -197,14 +203,17 @@ function renderProducts(products) {
     return;
   }
 
-  emptyState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
 
   if (count) {
     count.style.display = 'block';
     count.textContent = `Найдено: ${products.length}`;
   }
 
-  productsContainer.innerHTML = products.map(createProductCard).join('');
+  if (productsContainer) {
+    productsContainer.innerHTML = products.map(createProductCard).join('');
+  }
+
   afterRenderAttachHandlers(products);
 }
 
@@ -231,7 +240,8 @@ function scrollCarouselToIndex(slidesEl, idx) {
 }
 
 function getCarouselIndex(slidesEl) {
-  return Math.round(slidesEl.scrollLeft / slidesEl.clientWidth);
+  const w = slidesEl.clientWidth || 1;
+  return Math.round(slidesEl.scrollLeft / w);
 }
 
 function setDotsActive(carouselEl, idx) {
@@ -301,7 +311,7 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-      // More / Collapse description (pretty)
+  // More / Collapse description
   document.querySelectorAll('.product-card').forEach((card) => {
     const btn = card.querySelector('.more-btn');
     const fade = card.querySelector('.desc-fade');
@@ -318,20 +328,14 @@ function afterRenderAttachHandlers(products) {
 }
 
 // Filter
-// Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = normalizeSizeForUi(e.target.value);
   if (!selectedSize) return renderProducts(allProducts);
 
   renderProducts(allProducts.filter((p) => {
-    // основной путь — sizes массив
-    const arr = Array.isArray(p.sizes)
-      ? p.sizes.map(normalizeSizeForUi)
-      : [];
-
+    const arr = Array.isArray(p.sizes) ? p.sizes.map(normalizeSizeForUi) : [];
     if (arr.length) return arr.includes(selectedSize);
 
-    // fallback для старых записей
     return String(p.size || '')
       .split(',')
       .map(x => normalizeSizeForUi(x))
