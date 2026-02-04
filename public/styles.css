@@ -177,15 +177,35 @@ header h1 {
   font-weight: 800;
 }
 
-.product-description {
+.product-description{
+  margin-top: 6px;
   font-size: 13px;
-  color: #b0b0b0;
-  margin-bottom: 12px;
-  line-height: 1.45;
+  line-height: 1.35;
+  color: #cfcfcf;
+  white-space: normal;              /* ✅ переносы строк не сохраняем */
+}
+
+.product-description--clamped{
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 2;            /* ✅ ровно 2 строки */
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.product-card.expanded .product-description{
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.more-inline{
+  color: #8e8e8e;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 6px;
+  display: inline;
 }
 
 .product-footer {
