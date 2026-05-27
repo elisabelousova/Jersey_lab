@@ -5,7 +5,6 @@ const CHANNEL_URL = 'https://t.me/jersey_lab';
 let allProducts = [];
 let tg = null;
 
-// Telegram WebApp init
 if (window.Telegram && window.Telegram.WebApp) {
   tg = window.Telegram.WebApp;
   tg.ready();
@@ -108,7 +107,6 @@ async function loadProducts() {
 
 function cleanDescription(desc) {
   const raw = desc ? String(desc) : '';
-  // как раньше: убираем переносы, чтобы было аккуратно
   return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
@@ -241,7 +239,6 @@ function setDotsActive(carouselEl, idx) {
 }
 
 function afterRenderAttachHandlers(products) {
-  // Buy
   document.querySelectorAll('.buy-button').forEach((button) => {
     button.addEventListener('click', (e) => {
       const productId = e.currentTarget.dataset.productId;
@@ -250,7 +247,6 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // Carousel scroll => update dots
   document.querySelectorAll('.carousel').forEach((carouselEl) => {
     const slidesEl = carouselEl.querySelector('.slides');
     if (!slidesEl) return;
@@ -260,7 +256,6 @@ function afterRenderAttachHandlers(products) {
       setDotsActive(carouselEl, idx);
     }, { passive: true });
 
-    // Arrows
     const prevBtn = carouselEl.querySelector('.car-prev');
     const nextBtn = carouselEl.querySelector('.car-next');
 
@@ -289,7 +284,6 @@ function afterRenderAttachHandlers(products) {
     }
   });
 
-  // Click photo => open lightbox
   document.querySelectorAll('.product-photo').forEach((imgEl) => {
     imgEl.addEventListener('click', (e) => {
       e.preventDefault();
@@ -302,14 +296,14 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-  // ---- "… Подробнее" (только если реально обрезано) + раскрытие ----
+
   document.querySelectorAll('.product-card').forEach((card) => {
     const wrap = card.querySelector('.desc-wrap');
     const p = card.querySelector('.product-description');
     const btn = card.querySelector('.desc-more');
     if (!wrap || !p || !btn) return;
 
-    // line-clamp: проверка, что текст реально обрезан
+
     const isClamped = p.scrollHeight > p.clientHeight + 1;
 
     if (isClamped) {
@@ -329,7 +323,6 @@ function afterRenderAttachHandlers(products) {
   });
 }
 
-// Filter
 document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   const selectedSize = normalizeSizeForUi(e.target.value);
   if (!selectedSize) return renderProducts(allProducts);
@@ -345,7 +338,6 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
   }));
 });
 
-// ===== Lightbox =====
 let lbOpen = false;
 let lbUrls = [];
 let lbIdx = 0;
@@ -400,12 +392,10 @@ lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox();
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
 
-// click background to close
 lb?.addEventListener('click', (e) => {
   if (e.target === lb) closeLightbox();
 });
 
-// keyboard for desktop
 document.addEventListener('keydown', (e) => {
   if (!lbOpen) return;
   if (e.key === 'Escape') closeLightbox();
@@ -413,7 +403,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') nextLb();
 });
 
-// swipe in lightbox
 let touchStartX = 0;
 lb?.addEventListener('touchstart', (e) => {
   touchStartX = e.touches[0]?.clientX || 0;
@@ -426,7 +415,6 @@ lb?.addEventListener('touchend', (e) => {
   if (dx > 0) prevLb(); else nextLb();
 }, { passive: true });
 
-// Start
 document.addEventListener('DOMContentLoaded', () => {
   loadProducts();
 });
