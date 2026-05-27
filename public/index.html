@@ -16,33 +16,26 @@
         <img src="telegram-peer-photo-size-2-5400089182312975473-1-0-0.jpg" alt="Jersey Lab" />
       </div>
 
-      <div class="brand-text">
-        <h1>Jersey Lab Catalog</h1>
-        <p class="subtitle">В наличии сейчас</p>
-      </div>
+      <h1>Jersey Lab Catalog</h1>
+      <p class="subtitle">В наличии сейчас</p>
     </header>
 
     <section class="filters" aria-label="Фильтры">
-      <label class="filter-field">
-        <span class="filter-label">Размер</span>
-        <select id="sizeFilter" class="filter-select">
-          <option value="">Все размеры</option>
-          <option value="XS">XS</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="2XL">2XL</option>
-          <option value="3XL">3XL</option>
-          <option value="4XL">4XL</option>
-          <option value="5XL">5XL</option>
-        </select>
-      </label>
+      <label class="filter-label" for="sizeFilter">Фильтр по размеру</label>
+      <select id="sizeFilter" class="filter-select">
+        <option value="">Все размеры</option>
+        <option value="XS">XS</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+        <option value="2XL">2XL</option>
+        <option value="3XL">3XL</option>
+        <option value="4XL">4XL</option>
+        <option value="5XL">5XL</option>
+      </select>
 
-      <div class="catalog-status">
-        <div id="count" class="count" style="display:none;"></div>
-        <button id="activeFilter" class="active-filter" type="button" hidden></button>
-      </div>
+      <div id="count" class="count" style="display:none;"></div>
     </section>
 
     <div id="loading" class="loading">
@@ -60,6 +53,7 @@
     </section>
   </div>
 
+  <!-- Lightbox -->
   <div id="lightbox" class="lightbox" style="display:none;" aria-hidden="true">
     <button id="lbClose" class="lb-close" type="button" aria-label="Закрыть">✕</button>
 
@@ -68,13 +62,6 @@
     <button id="lbNext" class="lb-arrow lb-next" type="button" aria-label="Следующее фото">›</button>
 
     <div id="lbCounter" class="lb-counter">1 / 1</div>
-    <div class="lb-product">
-      <div>
-        <div id="lbTitle" class="lb-title"></div>
-        <div id="lbPrice" class="lb-price"></div>
-      </div>
-      <button id="lbBuy" class="lb-buy" type="button">Купить</button>
-    </div>
   </div>
 
   <script src="app.js"></script>
