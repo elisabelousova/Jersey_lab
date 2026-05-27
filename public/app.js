@@ -4,6 +4,7 @@ const CHANNEL_URL = 'https://t.me/jersey_lab';
 
 let allProducts = [];
 let tg = null;
+let lbProduct = null;
 
 if (window.Telegram && window.Telegram.WebApp) {
   tg = window.Telegram.WebApp;
@@ -30,7 +31,7 @@ function escapeHtml(str) {
 }
 
 function escapeAttr(str) {
-  return String(str ?? '').replaceAll('"', '&quot;');
+  return escapeHtml(str);
 }
 
 function normalizeSizeForUi(s) {
@@ -86,6 +87,8 @@ async function loadProducts() {
 
   try {
     const response = await fetch(`${API_URL}?status=available`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`API error ${response.status}`);
+
     const data = await response.json();
 
     if (data.ok && Array.isArray(data.products)) {
@@ -127,7 +130,6 @@ function createProductCard(product) {
         class="product-photo"
         data-product-id="${escapeAttr(product.id)}"
         data-photo-idx="${idx}"
-        onerror="this.src='https://via.placeholder.com/800x800?text=No+Image'"
       >
     </div>
   `).join('');
@@ -289,6 +291,10 @@ function afterRenderAttachHandlers(products) {
   });
 
   document.querySelectorAll('.product-photo').forEach((imgEl) => {
+    imgEl.addEventListener('error', () => {
+      imgEl.src = 'https://via.placeholder.com/800x800?text=No+Image';
+    }, { once: true });
+
     imgEl.addEventListener('click', (e) => {
       e.preventDefault();
       const productId = imgEl.dataset.productId;
@@ -300,13 +306,11 @@ function afterRenderAttachHandlers(products) {
     });
   });
 
-
   document.querySelectorAll('.product-card').forEach((card) => {
     const wrap = card.querySelector('.desc-wrap');
     const p = card.querySelector('.product-description');
     const btn = card.querySelector('.desc-more');
     if (!wrap || !p || !btn) return;
-
 
     const isClamped = p.scrollHeight > p.clientHeight + 1;
 
@@ -345,7 +349,6 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
 let lbOpen = false;
 let lbUrls = [];
 let lbIdx = 0;
-let lbProduct = null;
 
 function $(id) { return document.getElementById(id); }
 
@@ -367,13 +370,19 @@ function openLightbox(urls, startIdx = 0, product = null) {
 
   lbOpen = true;
   lb.style.display = 'flex';
+  lb.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
   renderLightbox();
 }
 
 function closeLightbox() {
   lbOpen = false;
   lbProduct = null;
-  if (lb) lb.style.display = 'none';
+  if (lb) {
+    lb.style.display = 'none';
+    lb.setAttribute('aria-hidden', 'true');
+  }
+  document.body.style.overflow = '';
 }
 
 function renderLightbox() {
@@ -381,8 +390,8 @@ function renderLightbox() {
   lbImg.src = lbUrls[lbIdx];
   if (lbCounter) lbCounter.textContent = `${lbIdx + 1} / ${lbUrls.length}`;
   if (lbTitle) lbTitle.textContent = lbProduct?.title || '';
-if (lbPrice) lbPrice.textContent = lbProduct ? `${formatPrice(lbProduct.price)} ₽` : '';
-if (lbBuy) lbBuy.hidden = !lbProduct;
+  if (lbPrice) lbPrice.textContent = lbProduct ? `${formatPrice(lbProduct.price)} ₽` : '';
+  if (lbBuy) lbBuy.hidden = !lbProduct;
 
   const multi = lbUrls.length > 1;
   if (lbPrev) lbPrev.style.visibility = multi ? 'visible' : 'hidden';
