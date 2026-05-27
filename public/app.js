@@ -345,6 +345,7 @@ document.getElementById('sizeFilter')?.addEventListener('change', (e) => {
 let lbOpen = false;
 let lbUrls = [];
 let lbIdx = 0;
+let lbProduct = null;
 
 function $(id) { return document.getElementById(id); }
 
@@ -354,6 +355,9 @@ const lbClose = $('lbClose');
 const lbPrev = $('lbPrev');
 const lbNext = $('lbNext');
 const lbCounter = $('lbCounter');
+const lbTitle = $('lbTitle');
+const lbPrice = $('lbPrice');
+const lbBuy = $('lbBuy');
 
 function openLightbox(urls, startIdx = 0) {
   lbUrls = Array.isArray(urls) ? urls : [];
