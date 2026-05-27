@@ -110,6 +110,10 @@ function cleanDescription(desc) {
   return raw.replace(/\s*\n+\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function formatPrice(value) {
+  return new Intl.NumberFormat('ru-RU').format(Number(value || 0));
+}
+
 function createProductCard(product) {
   const urls = Array.isArray(product.photo_urls) ? product.photo_urls.slice(0, 8) : [];
   const photoUrls = urls.length ? urls : ['https://via.placeholder.com/800x800?text=No+Image'];
