@@ -14,6 +14,7 @@ body {
   padding-bottom: 80px;
 }
 
+/* HEADER */
 .header {
   text-align: center;
   margin-bottom: 24px;
@@ -55,6 +56,7 @@ header h1 {
   font-weight: 600;
 }
 
+/* FILTERS */
 .filters { margin-bottom: 18px; }
 
 .filter-label {
@@ -94,6 +96,7 @@ header h1 {
   padding-left: 6px;
 }
 
+/* LOADING */
 .loading { text-align: center; padding: 44px 16px; }
 
 .spinner {
@@ -115,6 +118,7 @@ header h1 {
   padding: 14px 0;
 }
 
+/* GRID */
 .products-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -125,6 +129,7 @@ header h1 {
 @media (min-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
 
+/* CARD */
 .product-card {
   background: #1a1a1a;
   border-radius: 16px;
@@ -172,6 +177,7 @@ header h1 {
   font-weight: 800;
 }
 
+/* ===== DESCRIPTION: 2 lines + "… Подробнее" справа на 2-й строке ===== */
 .desc-wrap{
   position: relative;
   margin-bottom: 12px;
@@ -192,6 +198,7 @@ header h1 {
   overflow: hidden;
 }
 
+/* резерв справа, чтобы кнопка не наезжала на текст */
 .desc-wrap.has-more .product-description{
   padding-right: 110px; /* можно 96–120 */
 }
@@ -202,12 +209,13 @@ header h1 {
   overflow: visible;
 }
 
+/* кнопка "… Подробнее" — без белого фона (reset), не переносится */
 .desc-more{
   position: absolute;
   right: 0;
   bottom: 0;
 
-  display: none; 
+  display: none; /* включаем только если реально обрезано */
 
   appearance: none;
   -webkit-appearance: none;
@@ -267,6 +275,7 @@ header h1 {
   letter-spacing: -0.3px;
 }
 
+/* Button */
 .buy-button {
   flex: 1;
   padding: 11px 16px;
@@ -283,7 +292,7 @@ header h1 {
 .buy-button:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .buy-button:active { transform: translateY(0px); }
 
-
+/* Empty state button */
 .channel-button {
   margin-top: 14px;
   padding: 10px 14px;
@@ -313,6 +322,7 @@ header h1 {
   color: #cfcfcf;
 }
 
+/* ===== Carousel ===== */
 .carousel {
   position: relative;
   width: 100%;
@@ -347,6 +357,7 @@ header h1 {
   display: block;
 }
 
+/* dots */
 .dots {
   position: absolute;
   left: 0;
@@ -366,6 +377,7 @@ header h1 {
 }
 .dot.active { background: rgba(255,255,255,0.9); }
 
+/* arrows */
 .car-arrow {
   position: absolute;
   top: 50%;
@@ -411,6 +423,7 @@ header h1 {
   }
 }
 
+/* ===== Lightbox ===== */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -420,65 +433,6 @@ header h1 {
   justify-content: center;
   z-index: 9999;
   padding: 18px;
-}
-
-.lightbox {
-  padding: 64px 18px 96px;
-}
-
-.lb-img {
-  max-height: 72vh;
-}
-
-.lb-counter {
-  top: 18px;
-  bottom: auto;
-}
-
-.lb-product {
-  position: absolute;
-  right: 16px;
-  bottom: 16px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(20,20,20,0.72);
-  border: 1px solid rgba(255,255,255,0.14);
-  backdrop-filter: blur(14px);
-}
-
-.lb-title {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  color: #fff;
-  font-weight: 900;
-  font-size: 13px;
-  line-height: 1.25;
-}
-
-.lb-price {
-  margin-top: 4px;
-  color: #00d4ff;
-  font-weight: 900;
-  font-size: 16px;
-}
-
-.lb-buy {
-  flex: 0 0 auto;
-  min-width: 112px;
-  padding: 11px 16px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #00d4ff 0%, #00b8cc 100%);
-  color: #000;
-  font-weight: 900;
-  cursor: pointer;
 }
 
 .lb-img {
