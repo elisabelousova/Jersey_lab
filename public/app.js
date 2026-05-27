@@ -175,7 +175,7 @@ function createProductCard(product) {
         ${descHtml}
 
         <div class="product-footer">
-          <span class="product-price">${escapeHtml(product.price || 0)}₽</span>
+          <span class="product-price">${escapeHtml(formatPrice(product.price))} ₽</span>
           <button class="buy-button" data-product-id="${escapeAttr(product.id)}">Купить</button>
         </div>
       </div>
