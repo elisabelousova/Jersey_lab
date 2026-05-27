@@ -115,7 +115,6 @@ header h1 {
   padding: 14px 0;
 }
 
-/* GRID */
 .products-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -126,7 +125,6 @@ header h1 {
 @media (min-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
 
-/* CARD */
 .product-card {
   background: #1a1a1a;
   border-radius: 16px;
@@ -269,7 +267,6 @@ header h1 {
   letter-spacing: -0.3px;
 }
 
-/* Button */
 .buy-button {
   flex: 1;
   padding: 11px 16px;
@@ -316,7 +313,6 @@ header h1 {
   color: #cfcfcf;
 }
 
-/* ===== Carousel ===== */
 .carousel {
   position: relative;
   width: 100%;
