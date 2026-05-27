@@ -14,7 +14,6 @@ body {
   padding-bottom: 80px;
 }
 
-/* HEADER */
 .header {
   text-align: center;
   margin-bottom: 24px;
@@ -56,7 +55,6 @@ header h1 {
   font-weight: 600;
 }
 
-/* FILTERS */
 .filters { margin-bottom: 18px; }
 
 .filter-label {
@@ -96,7 +94,6 @@ header h1 {
   padding-left: 6px;
 }
 
-/* LOADING */
 .loading { text-align: center; padding: 44px 16px; }
 
 .spinner {
@@ -177,7 +174,6 @@ header h1 {
   font-weight: 800;
 }
 
-/* ===== DESCRIPTION: 2 lines + "… Подробнее" справа на 2-й строке ===== */
 .desc-wrap{
   position: relative;
   margin-bottom: 12px;
@@ -198,7 +194,6 @@ header h1 {
   overflow: hidden;
 }
 
-/* резерв справа, чтобы кнопка не наезжала на текст */
 .desc-wrap.has-more .product-description{
   padding-right: 110px; /* можно 96–120 */
 }
@@ -209,13 +204,12 @@ header h1 {
   overflow: visible;
 }
 
-/* кнопка "… Подробнее" — без белого фона (reset), не переносится */
 .desc-more{
   position: absolute;
   right: 0;
   bottom: 0;
 
-  display: none; /* включаем только если реально обрезано */
+  display: none; 
 
   appearance: none;
   -webkit-appearance: none;
@@ -292,7 +286,7 @@ header h1 {
 .buy-button:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .buy-button:active { transform: translateY(0px); }
 
-/* Empty state button */
+
 .channel-button {
   margin-top: 14px;
   padding: 10px 14px;
@@ -357,7 +351,6 @@ header h1 {
   display: block;
 }
 
-/* dots */
 .dots {
   position: absolute;
   left: 0;
@@ -377,7 +370,6 @@ header h1 {
 }
 .dot.active { background: rgba(255,255,255,0.9); }
 
-/* arrows */
 .car-arrow {
   position: absolute;
   top: 50%;
@@ -423,7 +415,6 @@ header h1 {
   }
 }
 
-/* ===== Lightbox ===== */
 .lightbox {
   position: fixed;
   inset: 0;
