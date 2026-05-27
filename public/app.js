@@ -296,7 +296,7 @@ function afterRenderAttachHandlers(products) {
 
       const product = products.find((p) => String(p.id) === String(productId));
       const urls = Array.isArray(product?.photo_urls) ? product.photo_urls.slice(0, 8) : [];
-      if (urls.length) openLightbox(urls, startIdx);
+      if (urls.length) openLightbox(urls, startIdx, product);
     });
   });
 
@@ -359,9 +359,10 @@ const lbTitle = $('lbTitle');
 const lbPrice = $('lbPrice');
 const lbBuy = $('lbBuy');
 
-function openLightbox(urls, startIdx = 0) {
+function openLightbox(urls, startIdx = 0, product = null) {
   lbUrls = Array.isArray(urls) ? urls : [];
   lbIdx = Math.max(0, Math.min(startIdx, lbUrls.length - 1));
+  lbProduct = product;
   if (!lbUrls.length || !lb || !lbImg) return;
 
   lbOpen = true;
@@ -371,6 +372,7 @@ function openLightbox(urls, startIdx = 0) {
 
 function closeLightbox() {
   lbOpen = false;
+  lbProduct = null;
   if (lb) lb.style.display = 'none';
 }
 
@@ -378,6 +380,9 @@ function renderLightbox() {
   if (!lbImg) return;
   lbImg.src = lbUrls[lbIdx];
   if (lbCounter) lbCounter.textContent = `${lbIdx + 1} / ${lbUrls.length}`;
+  if (lbTitle) lbTitle.textContent = lbProduct?.title || '';
+if (lbPrice) lbPrice.textContent = lbProduct ? `${formatPrice(lbProduct.price)} ₽` : '';
+if (lbBuy) lbBuy.hidden = !lbProduct;
 
   const multi = lbUrls.length > 1;
   if (lbPrev) lbPrev.style.visibility = multi ? 'visible' : 'hidden';
@@ -399,6 +404,10 @@ function nextLb() {
 lbClose?.addEventListener('click', (e) => { e.preventDefault(); closeLightbox(); });
 lbPrev?.addEventListener('click', (e) => { e.preventDefault(); prevLb(); });
 lbNext?.addEventListener('click', (e) => { e.preventDefault(); nextLb(); });
+lbBuy?.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (lbProduct) handleBuy(lbProduct);
+});
 
 lb?.addEventListener('click', (e) => {
   if (e.target === lb) closeLightbox();
