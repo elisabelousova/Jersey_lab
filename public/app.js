@@ -1,4 +1,5 @@
 const ADMIN_USERNAME = 'jersey_lab_admin';
+const ADMIN_USERNAME = 'elisabelousova';
 const API_URL = 'https://zlgxnrgnpfnjyiugdacu.supabase.co/functions/v1/products-api';
 const CHANNEL_URL = 'https://t.me/jersey_lab';
 
