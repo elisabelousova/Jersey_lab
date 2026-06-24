@@ -86,7 +86,7 @@ async function loadProducts() {
   const emptyState = document.getElementById('empty');
 
   try {
-    const response = await fetch(`${API_URL}?status=available`, { cache: 'no-store' });
+    const response = await fetch(`${API_URL}?status=available`);
     if (!response.ok) throw new Error(`API error ${response.status}`);
 
     const data = await response.json();
